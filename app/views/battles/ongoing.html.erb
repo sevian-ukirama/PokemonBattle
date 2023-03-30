@@ -1,0 +1,89 @@
+<%= form_with(url: battle_path(@battle), scope: :battle, local: true, id: :battle) do |form| %>
+    <%= form.number_field :submitted_move_id, hidden: true %>
+    <%= form.number_field :submitted_move_pp, hidden: true %>
+<div class="vh-100" style="background: url(<%= asset_path('field.jpg') %>);">
+    <div class="d-flex flex-column justify-content-center h-100 py-5 flex-wrap bg-ice">
+        <div class="flex-grow-1 flex-basis-50">
+            <div class="flex-grow-1 text-center text-light font-weight-bold border-right border-3 py-5 px-3">
+                <p>P L A Y E R &nbsp;1</p>
+                <div class="my-3">
+                    <h1><%= @pokemon_1.name %></h1>
+                </div>
+                <div class="progress" id="pokemon_1_maximum_hp" style="width: 100%">
+                    <p class="mx-2 font-weight-bold text-success">HP</p>
+                    <div class="progress-bar bg-success" role="progressbar" id="pokemon_1_current_hp" style="width: <%= 100*@pokemon_1.current_hp/@pokemon_1.maximum_hp %>%"></div>
+                    <p class="mx-2 font-weight-bold text-success">
+                        <%= @pokemon_1.current_hp %>/<%= @pokemon_1.maximum_hp %>
+                    </p>
+                </div>
+                <div class="progress my-1" id="pokemon_2_status" style="width: 15%;">
+                    <p class="mx-2 font-weight-bold text-success">Status</p>
+                    <p class="mx-2 font-weight-bold text-dark"><%= @pokemon_1.status_id %></p>
+                </div>
+                <div class="my-5">
+                    <%= image_tag @pokemon_1.image_url, id: 'pokemon_1_sprite', class: 'w-25 h-50' %>
+                </div>
+            </div>
+            <div class="flex-grow-1 text-center text-light font-weight-bold border-right border-3 py-5 px-3">
+                <hr class="border border-light">
+                <div class="d-flex justify-content-center flex-wrap">
+                <% if @battle.turn_number.odd? %>
+                    <% @pokemon_1_moves.each do |pokemon_1_move| %>
+                        <%= form.button type: "button", 
+                            class: 'btn btn-warning move-button font-weight-bold flex-grow-1 my-2 mx-1 flex-basis-35', 
+                            disabled: pokemon_1_move.current_pp.zero?,
+                            data: {move_id: pokemon_1_move.move_id, move_pp: pokemon_1_move.move.usage_pp} do %>
+                         <%= pokemon_1_move.move.name  %>
+                         <%= "(#{pokemon_1_move.current_pp}/#{pokemon_1_move.move.maximum_pp})" %>
+                        <% end %>
+                    <% end %>
+                <% else %>
+                    <h2>Waiting for Player 2...</h2>
+                <% end %>
+                </div>
+            </div>
+        </div>
+        <div class="flex-grow-1 flex-basis-50">
+            <div class="flex-grow-1 text-center text-light font-weight-bold border-right border-3 py-5 px-3">
+                <p>P L A Y E R &nbsp;2</p>
+                <div class="my-3">
+                    <h1><%= @pokemon_2.name %></h1>
+                </div>
+                <div class="progress" id="pokemon_2_maximum_hp" style="width: 100%">
+                    <p class="mx-2 font-weight-bold text-success">HP</p>
+                    <div class="progress-bar bg-success" role="progressbar" id="pokemon_2_current_hp" style="width: <%= 100*@pokemon_2.current_hp/@pokemon_2.maximum_hp %>%"></div>
+                    <p class="mx-2 font-weight-bold text-success">
+                        <%= @pokemon_2.current_hp %>/<%= @pokemon_2.maximum_hp %>
+                    </p>
+                </div>
+                <div class="progress my-1" id="pokemon_2_status" style="width: 15%;">
+                    <p class="mx-2 font-weight-bold text-success">Status</p>
+                    <p class="mx-2 font-weight-bold text-dark"><%= @pokemon_2.status_id %></p>
+                </div>
+                <div class="my-5">
+                    <%= image_tag @pokemon_2.image_url, id: 'pokemon_2_sprite', class: 'w-25 h-50' %>
+                </div>
+            </div>
+            <div class="flex-grow-1 text-center text-light font-weight-bold border-right border-3 py-5 px-3">
+                <hr class="border border-light">
+                <div class="d-flex justify-content-center flex-wrap">
+                <% if @battle.turn_number.even? %>
+                    <% @pokemon_2_moves.each do |pokemon_2_move| %>
+                        <%= form.button type: "button", 
+                            class: 'btn btn-warning move-button font-weight-bold flex-grow-1 my-2 mx-1 flex-basis-35', 
+                            disabled: pokemon_2_move.current_pp.zero?,
+                            data: {move_id: pokemon_2_move.move_id, move_pp: pokemon_2_move.move.usage_pp} do %>
+                         <%= pokemon_2_move.move.name  %>
+                         <%= "(#{pokemon_2_move.current_pp}/#{pokemon_2_move.move.maximum_pp})" %>
+                        <% end %>
+                    <% end %>
+                <% else %>
+                    <h2>Waiting for Player 1...</h2>
+                <% end %>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<%= javascript_include_tag "battle_ongoing" %>
+<% end %>

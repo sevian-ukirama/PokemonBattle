@@ -1,0 +1,8 @@
+  <div class="position-absolute w-100 my-3">
+  <% flash.each do |message_type, message| %>
+    <div class="alert alert-<%= message_type %> w-100 my-3">
+      <p class="m-0 font-weight-bold"><%= message %></p>
+    </div>
+    <script type="text/javascript">setTimeout(()=>{document.querySelector('.alert').remove();}, 10000) </script>
+  <% end %>
+</div>

@@ -1,0 +1,44 @@
+<%= form_with(url: battle_start_path, scope: :battle, local: true) do |form| %>
+<div class="container vh-100">
+    <div class="d-flex flex-row justify-content-center flex-wrap bg-light">
+        <div class="flex-grow-1 flex-basis-50 text-center font-weight-bold border-right border-3 py-5 px-3">
+            <p>P L A Y E R &nbsp;1</p>
+            <div class="my-3">
+                <%= form.collection_select :pokemon_1_id, @pokemons, :id, :name, { include_blank: 'Select Your Pokemon...', disabled: true }, { class: 'form-control pokemon_select', 'data-target': 1 } %>
+            </div>
+            <div class="progress overflow-x-auto w-100" id="pokemon_1_maximum_hp">
+                <p class="mx-2 font-weight-bold bg-danger text-success">HP</p>
+                <div class="progress-bar bg-success" role="progressbar" id="pokemon_1_current_hp"></div>
+            </div>
+            <div class="my-5">
+                <%= image_tag asset_path('pokeball.png'), id: 'pokemon_1_sprite', class: 'w-50 h-100', alt: asset_path('pokeball.png') %>
+            </div>
+            <div class="my-1">
+                <%= link_to 'HEAL', '#', class: "btn btn-success font-weight-bold px-3 py-1 disabled", id: 'pokemon_1_heal' %>
+            </div>
+        </div>
+        <!--  -->
+        <div class="flex-grow-1 flex-basis-50 text-center font-weight-bold border-right border-3 py-5 px-3">
+            <p>P L A Y E R &nbsp;2</p>
+            <div class="my-3">
+                <%= form.collection_select :pokemon_2_id, @pokemons, :id, :name, { include_blank: 'Select Your Pokemon...', disabled: true }, { class: 'form-control pokemon_select', 'data-target': 2 } %>
+            </div>
+            <div class="progress overflow-x-auto w-100" id="pokemon_2_maximum_hp">
+                <p class="mx-2 font-weight-bold bg-danger text-success">HP</p>
+                <div class="progress-bar bg-success" role="progressbar" id="pokemon_2_current_hp"></div>
+            </div>
+            <div class="my-5">
+                <%= image_tag asset_path('pokeball.png'), id: 'pokemon_2_sprite', class: 'w-50 h-100', alt: asset_path('pokeball.png') %>
+            </div>
+            <div class="my-1">
+                <%= link_to 'HEAL', '#', class: "btn btn-success font-weight-bold px-3 py-1 disabled", id: 'pokemon_2_heal' %>
+            </div>
+        </div>
+    </div>
+    <div class="d-flex align-items-center justify-content-center py-5">
+        <%= form.submit 'S T A R T', class: 'btn btn-primary font-weight-bold px-5 py-3', disabled: true %>
+    </div>
+</div>
+<script type="text/javascript">var pokemons = JSON.parse('<%= @pokemons.to_json.html_safe %>')</script>
+<%= javascript_include_tag "battle_new" %>
+<% end %>
