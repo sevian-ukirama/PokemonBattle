@@ -19,8 +19,6 @@ module PokemonBattle
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
-    # config.PokemonBattle = config_for(:PokemonBattle_config)
-    # config.PokemonBattle = config_for(:local_env)
     config.PokemonBattle = config_for(:PokemonBattle_config)
   end
 end

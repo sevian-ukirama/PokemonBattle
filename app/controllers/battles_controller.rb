@@ -9,6 +9,7 @@ class BattlesController < ApplicationController
 
 	def new
 		@pokemons = Pokemon.all
+		@moves = @pokemons.joins(:pokemon_moves)
 	end
 
 	def create

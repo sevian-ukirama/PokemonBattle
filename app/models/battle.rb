@@ -12,17 +12,66 @@ class Battle < ApplicationRecord
 	has_many :pokemon_1_move_moves, through: :pokemon_1_moves, source: :moves 
 	has_many :pokemon_2_move_moves, through: :pokemon_2_moves, source: :moves 
 
-	before_save :check_duplicate_pokemons
-	before_save :check_duplicate_pokemons
+	# Validates presence
+	validates :pokemon_1, presence: true
+	validates :pokemon_2, presence: true
+
+	# Custom validation
+	validate :not_duplicate_pokemons
+	validate :pp_not_zero
+	validate :hp_not_zero
+	validate :pokemons_not_in_battle
 
 	enum status_id: [:ongoing, :finished]
 
 	private
 
-	def check_duplicate_pokemons
-		if pokemon_1.id == pokemon_2.id
-			errors.add(:pokemon_1_id, "can't be the same as pokemon 2") 
-			redirect_to new_battle_path
+	def not_duplicate_pokemons
+		if self.pokemon_1 == self.pokemon_2
+			errors.add(:pokemon_1, " can't be the same as Pokemon 2")
 		end
 	end
+
+	def pp_not_zero
+		pokemon_1_all_pp_zero = false
+
+		self.pokemon_1.pokemon_moves.each do |move|
+			pokemon_1_all_pp_zero = move.current_pp.zero?
+		end
+
+		if pokemon_1_all_pp_zero
+			errors.add(:pokemon_1, " has no valid Moves")
+		end
+
+		pokemon_2_all_pp_zero = false
+
+		self.pokemon_2.pokemon_moves.each do |move|
+			pokemon_2_all_pp_zero = move.current_pp.zero?
+		end
+
+		if pokemon_2_all_pp_zero
+			errors.add(:pokemon_2, " has no valid Moves")
+		end
+	end
+
+	def hp_not_zero
+		if pokemon_1.current_hp.zero?
+			errors.add(:pokemon_1, " has no HP")
+		end
+
+		if pokemon_2.current_hp.zero?
+			errors.add(:pokemon_2, " has no HP")
+		end
+	end
+
+	def pokemons_not_in_battle
+		# Ongoing in DB Battles represented as 0 (int)
+		ongoing = 0;
+		if Battle.where(pokemon_1_id: pokemon_1.id).where(status_id: ongoing).exists?
+			errors.add(:pokemon_1, " already in Battle")
+		elsif Battle.where(pokemon_2_id: pokemon_2.id).where(status_id: ongoing).exists?
+			errors.add(:pokemon_2, " already in Battle")
+		end
+	end
+
 end
