@@ -1,6 +1,7 @@
 <%= form_with(url: battle_path(@battle), scope: :battle, local: true, id: :battle) do |form| %>
     <%= form.number_field :submitted_move_id, hidden: true %>
     <%= form.number_field :submitted_move_pp, hidden: true %>
+    <%= form.number_field :submitted_move_row_order, hidden: true %>
 <div class="vh-100" style="background: url(<%= asset_path('field.jpg') %>);">
     <div class="d-flex flex-column justify-content-center h-100 py-5 flex-wrap bg-ice">
         <div class="flex-grow-1 flex-basis-50">
@@ -32,7 +33,10 @@
                         <%= form.button type: "button", 
                             class: 'btn btn-warning move-button font-weight-bold flex-grow-1 my-2 mx-1 flex-basis-35', 
                             disabled: pokemon_1_move.current_pp.zero?,
-                            data: {move_id: pokemon_1_move.move_id, move_pp: pokemon_1_move.move.usage_pp} do %>
+                            data: { move_id: pokemon_1_move.move_id, 
+                                    move_pp: pokemon_1_move.move.usage_pp,
+                                    move_row_order: pokemon_1_move.row_order
+                            } do %>
                          <%= pokemon_1_move.move.name  %>
                          <%= "(#{pokemon_1_move.current_pp}/#{pokemon_1_move.move.maximum_pp})" %>
                         <% end %>
@@ -72,7 +76,10 @@
                         <%= form.button type: "button", 
                             class: 'btn btn-warning move-button font-weight-bold flex-grow-1 my-2 mx-1 flex-basis-35', 
                             disabled: pokemon_2_move.current_pp.zero?,
-                            data: {move_id: pokemon_2_move.move_id, move_pp: pokemon_2_move.move.usage_pp} do %>
+                            data: { move_id: pokemon_2_move.move_id, 
+                                    move_pp: pokemon_2_move.move.usage_pp,
+                                    move_row_order: pokemon_2_move.row_order
+                            } do %>
                          <%= pokemon_2_move.move.name  %>
                          <%= "(#{pokemon_2_move.current_pp}/#{pokemon_2_move.move.maximum_pp})" %>
                         <% end %>

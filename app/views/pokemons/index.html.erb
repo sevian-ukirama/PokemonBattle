@@ -1,7 +1,10 @@
 <div class="vh-100" style="background: #192a56;">
     <header class="masthead d-flex flex-row align-items-center justify-content-between py-2 px-5 w-100 text-light">
-        <h1>All <%= 'Pokemon'.pluralize(@pokemons.length) %></h1>
-        <%= link_to 'Heal All', pokemons_heal_path, class: "btn btn-light font-weight-bold text-success" %>
+        <h1 class="">All <%= 'Pokemon'.pluralize(@pokemons.length) %></h1>
+        <div class="justify-content-end">
+            <%= link_to 'New Pokemon', pokemons_new_path, class: "btn btn-success font-weight-bold mx-2" %>
+            <%= link_to 'Heal All', pokemons_heal_path, class: "btn btn-light font-weight-bold text-success mx-2" %>
+        </div>
     </header>
     <hr class="border border-3 border-light w-75 mx-auto">
     <% @pokemons.each do |pokemon| %>

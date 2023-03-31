@@ -16,6 +16,8 @@
             <div class="my-1">
                 <%= link_to 'HEAL', '#', class: "btn btn-success font-weight-bold px-3 py-1 disabled", id: 'pokemon_1_heal' %>
             </div>
+            <div class="my-2 justify-content-between" id="pokemon_1_moves">
+            </div>
         </div>
         <!--  -->
         <div class="flex-grow-1 flex-basis-50 text-center font-weight-bold border-right border-3 py-5 px-3">
@@ -33,6 +35,8 @@
             <div class="my-1">
                 <%= link_to 'HEAL', '#', class: "btn btn-success font-weight-bold px-3 py-1 disabled", id: 'pokemon_2_heal' %>
             </div>
+            <div class="my-2 justify-content-between" id="pokemon_2_moves">
+            </div>
         </div>
     </div>
     <div class="d-flex align-items-center justify-content-center py-5">
@@ -41,6 +45,7 @@
 </div>
 <script type="text/javascript">
     var pokemons = JSON.parse('<%= @pokemons.to_json.html_safe %>');
+    var pokemon_moves = JSON.parse('<%= @pokemon_moves.to_json.html_safe %>');
     var moves = JSON.parse('<%= @moves.to_json.html_safe %>');
 </script>
 <%= javascript_include_tag "battle_new" %>

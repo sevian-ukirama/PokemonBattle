@@ -1,6 +1,7 @@
 class Battle < ApplicationRecord
 	belongs_to :pokemon_1, class_name: 'Pokemon'
 	belongs_to :pokemon_2, class_name: 'Pokemon'
+	belongs_to :winner_pokemon, class_name: 'Pokemon', optional: true
 
 	# Connects to Pokemon_Moves, through Pokemons
 	# Flow: Battle > Pokemons > Pokemon_Moves
@@ -15,12 +16,13 @@ class Battle < ApplicationRecord
 	# Validates presence
 	validates :pokemon_1, presence: true
 	validates :pokemon_2, presence: true
+	# validates :winner_pokemon, presence: false
 
 	# Custom validation
-	validate :not_duplicate_pokemons
-	validate :pp_not_zero
-	validate :hp_not_zero
-	validate :pokemons_not_in_battle
+	validate :not_duplicate_pokemons, on: :create
+	validate :pp_not_zero, on: :create
+	validate :hp_not_zero, on: :create
+	validate :pokemons_not_in_battle, on: :create
 
 	enum status_id: [:ongoing, :finished]
 
@@ -33,20 +35,20 @@ class Battle < ApplicationRecord
 	end
 
 	def pp_not_zero
-		pokemon_1_all_pp_zero = false
+		pokemon_1_all_pp_zero = true
 
 		self.pokemon_1.pokemon_moves.each do |move|
-			pokemon_1_all_pp_zero = move.current_pp.zero?
+			pokemon_1_all_pp_zero = !move.current_pp.zero? ? false : pokemon_1_all_pp_zero
 		end
 
 		if pokemon_1_all_pp_zero
 			errors.add(:pokemon_1, " has no valid Moves")
 		end
 
-		pokemon_2_all_pp_zero = false
+		pokemon_2_all_pp_zero = true
 
 		self.pokemon_2.pokemon_moves.each do |move|
-			pokemon_2_all_pp_zero = move.current_pp.zero?
+			pokemon_2_all_pp_zero = !move.current_pp.zero? ? false : pokemon_2_all_pp_zero
 		end
 
 		if pokemon_2_all_pp_zero
@@ -67,9 +69,17 @@ class Battle < ApplicationRecord
 	def pokemons_not_in_battle
 		# Ongoing in DB Battles represented as 0 (int)
 		ongoing = 0;
-		if Battle.where(pokemon_1_id: pokemon_1.id).where(status_id: ongoing).exists?
+		if Battle.where(pokemon_1_id: pokemon_1.id)
+			.where(status_id: ongoing)
+			.where.not(id: self.id)
+			.exists?
+
 			errors.add(:pokemon_1, " already in Battle")
-		elsif Battle.where(pokemon_2_id: pokemon_2.id).where(status_id: ongoing).exists?
+		elsif Battle.where(pokemon_2_id: pokemon_2.id)
+			.where(status_id: ongoing)
+			.where.not(id: self.id)
+			.exists?
+
 			errors.add(:pokemon_2, " already in Battle")
 		end
 	end

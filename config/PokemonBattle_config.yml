@@ -1,0 +1,7 @@
+development:
+  POKEMON_STATUSES: [[1, 'Normal'], [2, 'Paralysis'], [3, 'Poison'], [4, 'Sleep'], [5, 'Frozen'], [6, 'Burn']]
+  POKEMON_TYPES: [[1, 'Normal'],[ 2, 'Fire'],[ 3, 'Water'],[ 4, 'Grass'],[ 5, 'Electric'],[ 6, 'Ice'],[ 7, 'Fighting'],[ 8, 'Poison'],[ 9, 'Ground'], [10, 'Flying'], [11, 'Psychic'], [12, 'Bug'], [13, 'Rock'], [14, 'Ghost'], [15, 'Dragon']]
+
+production:
+  POKEMON_STATUSES: [[1, 'Normal'], [2, 'Paralysis'], [3, 'Poison'], [4, 'Sleep'], [5, 'Frozen'], [6, 'Burn']]
+  POKEMON_TYPES: [[1, 'Normal'],[ 2, 'Fire'],[ 3, 'Water'],[ 4, 'Grass'],[ 5, 'Electric'],[ 6, 'Ice'],[ 7, 'Fighting'],[ 8, 'Poison'],[ 9, 'Ground'], [10, 'Flying'], [11, 'Psychic'], [12, 'Bug'], [13, 'Rock'], [14, 'Ghost'], [15, 'Dragon']]

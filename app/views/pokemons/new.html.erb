@@ -8,10 +8,10 @@
         <div class="flex-grow-1 text-left font-weight-bold border-right border-3 px-3 py-5">
             <div class="border-2">
                 <%= form.label :image_url, class: "mx-1" %>
-                <%= form.text_field :image_url, class: "form-control" %>
+                <%= form.text_field :image_url, class: "form-control", required: true %>
 
                 <%= form.label :name, class: "mx-1 mt-2" %>
-                <%= form.text_field :name, class: "form-control", required: false %>
+                <%= form.text_field :name, class: "form-control", required: true %>
 
                 <%= form.label :type_1_id, class: "mx-1 mt-2" %>
                 <%= form.select :type_1_id, options_for_select(@types.map { |t| [t[1], t[0]] }, '-'), 
@@ -24,47 +24,47 @@
                     { class: 'form-control' } %>
 
                 <%= form.label :maximum_hp, 'Maximum HP', class: "mx-1 mt-2" %>
-                <%= form.number_field :maximum_hp, class: "form-control", required: false %>
+                <%= form.number_field :maximum_hp, class: "form-control", min: 1, required: true %>
             </div>
         </div>
         <div class="flex-grow-1 text-left font-weight-bold border-right border-3 px-3 py-5">
             <div class="border-2">
                 <%= form.label :attack, class: "mx-1" %>
-                <%= form.number_field :attack, class: "form-control" %>
+                <%= form.number_field :attack, class: "form-control", min: 1, required: true %>
 
                 <%= form.label :defense, class: "mx-1 mt-2" %>
-                <%= form.number_field :defense, class: "form-control", required: false %>
+                <%= form.number_field :defense, class: "form-control", min: 1, required: true %>
 
                 <%= form.label :speed, class: "mx-1 mt-2" %>
-                <%= form.number_field :speed, class: "form-control", required: false %>
+                <%= form.number_field :speed, class: "form-control", min: 1, required: true %>
 
                 <%= form.label :special_attack, 'Sp. Attack', class: "mx-1 mt-2" %>
-                <%= form.number_field :special_attack, class: "form-control", required: false %>
+                <%= form.number_field :special_attack, class: "form-control", min: 1, required: true %>
 
                 <%= form.label :special_defense, 'Sp. Defense', class: "mx-1 mt-2" %>
-                <%= form.number_field :special_defense, class: "form-control", required: false %>
+                <%= form.number_field :special_defense, class: "form-control", min: 1, required: true %>
             </div>
         </div>
         <div class="flex-grow-1 text-left font-weight-bold px-3 py-5">
             <div class="border-2">
 
-            <%= form.label :move_1_id, class: "mx-1" %>
-            <%= form.collection_select :move_1_id, @moves, :id, :name, 
+            <%= form.label :move_id, class: "mx-1" %>
+            <%= form.collection_select 'pokemon_moves[move_1_id]', @moves, :id, :name,  
+                    { include_blank: '-', selected: nil }, 
+                    { class: 'form-control', required: true } %>
+
+            <%= form.label :move_id, class: "mx-1" %>
+            <%= form.collection_select 'pokemon_moves[move_2_id]', @moves, :id, :name,  
+                    { include_blank: '-', selected: nil }, 
+                    { class: 'form-control', required: true } %>
+
+            <%= form.label :move_id, class: "mx-1" %>
+            <%= form.collection_select 'pokemon_moves[move_3_id]', @moves, :id, :name,  
                     { include_blank: '-', selected: nil }, 
                     { class: 'form-control' } %>
 
-            <%= form.label :move_2_id, class: "mx-1" %>
-            <%= form.collection_select :move_2_id, @moves, :id, :name, 
-                    { include_blank: '-', selected: nil }, 
-                    { class: 'form-control' } %>
-
-            <%= form.label :move_3_id, class: "mx-1" %>
-            <%= form.collection_select :move_3_id, @moves, :id, :name, 
-                    { include_blank: '-', selected: nil }, 
-                    { class: 'form-control' } %>
-
-            <%= form.label :move_4_id, class: "mx-1" %>
-            <%= form.collection_select :move_4_id, @moves, :id, :name, 
+            <%= form.label :move_id, class: "mx-1" %>
+            <%= form.collection_select 'pokemon_moves[move_4_id]', @moves, :id, :name,  
                     { include_blank: '-', selected: nil }, 
                     { class: 'form-control' } %>
             </div>

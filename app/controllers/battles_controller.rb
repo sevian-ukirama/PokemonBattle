@@ -2,6 +2,7 @@ class BattlesController < ApplicationController
 	require 'Pokemon/TypeCalculation'
 
 	before_action :check_battle_status, only: [:show]
+	before_action :check_battle_winner, only: [:show]
 
 	def index
 		@battles = Battle.order(created_at: :asc)
@@ -9,7 +10,8 @@ class BattlesController < ApplicationController
 
 	def new
 		@pokemons = Pokemon.all
-		@moves = @pokemons.joins(:pokemon_moves)
+		@pokemon_moves = PokemonMove.all
+		@moves = Move.all
 	end
 
 	def create
@@ -29,10 +31,10 @@ class BattlesController < ApplicationController
 	def show
 		@battle = Battle.find(params[:id])
 		if @battle.status_id == 'ongoing'
-			@pokemon_1 = Pokemon.find(@battle.pokemon_1_id)
-			@pokemon_2 = Pokemon.find(@battle.pokemon_2_id)
-			@pokemon_1_moves = @pokemon_1.pokemon_moves.joins(:move).all
-			@pokemon_2_moves = @pokemon_2.pokemon_moves.joins(:move).all
+			@pokemon_1 = @battle.pokemon_1
+			@pokemon_2 = @battle.pokemon_2
+			@pokemon_1_moves = @pokemon_1.pokemon_moves.order(row_order: :asc).joins(:move).order(name: :asc).all
+			@pokemon_2_moves = @pokemon_2.pokemon_moves.order(row_order: :asc).joins(:move).order(name: :asc).all
 
 			render 'ongoing'
 		else
@@ -44,6 +46,7 @@ class BattlesController < ApplicationController
 		battle = Battle.find(params[:id])
 		submitted_move_id = params[:battle][:submitted_move_id]
 		submitted_usage_pp = params[:battle][:submitted_move_pp]
+		submitted_move_row_order = params[:battle][:submitted_move_row_order]
 		performer_pokemon = battle.turn_number.odd? ? battle.pokemon_1 : battle.pokemon_2
 		target_pokemon = battle.turn_number.odd? ? battle.pokemon_2 : battle.pokemon_1
 
@@ -53,8 +56,7 @@ class BattlesController < ApplicationController
 		hit = rand(100) < move.accuracy
 
 		if hit
-			perform_hit(performer_pokemon, target_pokemon, submitted_move_id)
-			check_battle_winner(battle)
+			perform_hit(performer_pokemon, target_pokemon, submitted_move_id, submitted_move_row_order)
 		else
 			flash[:warning] = "Attack Missed"
 		end
@@ -67,7 +69,7 @@ class BattlesController < ApplicationController
 
 		add_turn_number(battle, next_turn_counter)
 		unless battle.save
-			flash[:danger] = 'Failed to change Turn'
+			flash[:danger] = battle.errors.full_messages[0]
 		end
 
 		redirect_to battle_path(params[:id])	
@@ -77,10 +79,9 @@ class BattlesController < ApplicationController
 		battle.turn_number = battle.turn_number+next_turn_counter
 	end
 
-	def perform_hit(performer_pokemon, target_pokemon, submitted_move_id)
-		performer_move = performer_pokemon.pokemon_moves.find_by(move_id: submitted_move_id)
+	def perform_hit(performer_pokemon, target_pokemon, submitted_move_id, submitted_move_row_order)
+		performer_move = performer_pokemon.pokemon_moves.find_by(move_id: submitted_move_id, row_order: submitted_move_row_order)
 		move = performer_pokemon.moves.find_by(id: submitted_move_id)
-
 		# Damage calculation
 		damage = damage_calc(performer_pokemon, target_pokemon, move)
 
@@ -111,6 +112,11 @@ class BattlesController < ApplicationController
 	def damage_calc(performer_pokemon, target_pokemon, move)
 		level = 1
 		critical = rand(100) < 22 ? 2 : 1
+
+		# If critical, flash message
+		if critical == 2
+			flash[:primary] = "Critical Hit!"
+		end
 
 		# First part of dmg Calc
 		first_part_dmg = ((2*level*critical)/5)+2
@@ -167,36 +173,43 @@ class BattlesController < ApplicationController
 		pokemon.status_id = 'Normal'
 	end	
 
-	def check_battle_winner(battle)
-		pokemon_1 = battle.pokemon_1
-		pokemon_2 = battle.pokemon_2
-
-		if pokemon_1.current_hp.zero?
-			battle.winner_pokemon_id = battle.pokemon_2_id
-			battle.status_id = 'finished'
-			if battle.save
-				flash[:success] = 'Battle is over!'
-			else
-				flash[:danger] = battle.errors.full_messages[0]
-			end
-		elsif pokemon_2.current_hp.zero?
-			battle.winner_pokemon_id = battle.pokemon_1_id
-			battle.status_id = 'finished'
-			if battle.save
-				flash[:success] = 'Battle is over!'
-			else
-				flash[:danger] = battle.errors.full_messages[0]
-			end
-		end
-	end
-
 	def end
 		@battle = Battle.find(params[:id])
-		if @battle.status_id = 'finished'
-			@winner_pokemon = Pokemon.find(@battle.winner_pokemon_id)
+		if @battle.status_id == 'finished'
+			@winner_pokemon = @battle.winner_pokemon
 		else
 			redirect_to battle_path(@battle)
 		end
+	end
+
+	def finish_battle
+		battle = Battle.find(params[:id])
+		# Only end battle if turn is more than 2
+		if battle.turn_number > 2
+			set_battle_winner(battle)
+			battle.status_id = 'finished'
+
+			unless battle.save
+				flash[:danger] = battle.errors.full_messages[0]
+			end
+			flash[:success] = "Battle #{battle.id} is now Finished. #{battle.winner_pokemon.name} is the Winner!"
+			redirect_to root_url
+		else
+			flash[:danger] = "Pokemon #{battle.turn_number%2+1} haven't made a move yet!"
+			redirect_to battle_path(battle)
+		end
+	end
+
+	def set_battle_winner(battle)
+		# Get hp percentage of each pokemon
+		pokemon_1_hp_percentage = 100*battle.pokemon_1.current_hp/battle.pokemon_1.maximum_hp
+		pokemon_2_hp_percentage = 100*battle.pokemon_2.current_hp/battle.pokemon_2.maximum_hp
+
+
+		# Ones with higher hp percentage wins 
+		battle.winner_pokemon_id = pokemon_1_hp_percentage > pokemon_2_hp_percentage ? 
+									battle.pokemon_1.id :
+									battle.pokemon_2.id									
 	end
 
 	def destroy
@@ -217,6 +230,43 @@ class BattlesController < ApplicationController
 		if battle.status_id == 'finished'
 			redirect_to battle_end_path(battle)
 		end
+	end
+
+	def check_battle_winner
+		battle = Battle.find(params[:id])
+		pokemon_1 = battle.pokemon_1
+		pokemon_2 = battle.pokemon_2
+
+		if self.zero_hp?(pokemon_1) || self.zero_available_moves?(pokemon_1)
+			battle.winner_pokemon_id = battle.pokemon_2_id
+			battle.status_id = 'finished'
+			flash[:light] = "#{pokemon_1.name} ran out of Moves!"
+
+			unless battle.save
+				flash[:danger] = battle.errors.full_messages[0]
+			end
+		elsif self.zero_hp?(pokemon_2) || self.zero_available_moves?(pokemon_2)
+			battle.winner_pokemon_id = battle.pokemon_1_id
+			battle.status_id = 'finished'
+			flash[:light] = "#{pokemon_2.name} ran out of Moves!"
+			
+			unless battle.save
+				flash[:danger] = battle.errors.full_messages[0]
+			end
+		end
+	end
+
+	def zero_hp?(pokemon)
+		pokemon.current_hp.zero?
+	end
+
+	def zero_available_moves?(pokemon)
+		zero_available_moves = true
+		pokemon.pokemon_moves.each do |move|
+			zero_available_moves = !move.current_pp.zero? ? false : zero_available_moves
+			puts zero_available_moves
+		end
+		zero_available_moves
 	end
 
 end

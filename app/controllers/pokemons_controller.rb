@@ -11,7 +11,7 @@ class PokemonsController < ApplicationController
 
 	def heal
 		if params[:id].blank?
-			pokemons = Pokemon.where('current_hp < maximum_hp')
+			pokemons = Pokemon.all
 
 			pokemons.each do |pokemon|
 				pokemon.current_hp = pokemon.maximum_hp
@@ -25,18 +25,26 @@ class PokemonsController < ApplicationController
 					flash[:danger] = pokemon.errors.full_messages[0]
 				end
 			end
+
+			flash[:success] = 'All Pokemon has been Healed'
+			redirect_to pokemons_path
 		else
 			pokemon = Pokemon.find(params[:id])
 			pokemon.current_hp = pokemon.maximum_hp
 			pokemon.status_id = 'Normal'
 
+			pokemon.pokemon_moves.each do |pokemon_move|
+				pokemon_move.current_pp = pokemon_move.move.maximum_pp
+			end
+
 			unless pokemon.save
 				flash[:danger] = pokemon.errors.full_messages[0]
 			end
+
+			flash[:success] = "#{pokemon.name} has been Healed"
+			redirect_to new_battle_path
 		end
 
-		flash[:success] = 'Pokemons has been Healed'
-		redirect_to pokemons_path
 	end
 
 	def create
@@ -55,11 +63,19 @@ class PokemonsController < ApplicationController
 		pokemon.special_attack = params[:pokemon][:special_attack]
 		pokemon.special_defense = params[:pokemon][:special_defense]
 
-		4.times do |index|
-			move_from_db = Move.find(params[:pokemon]["move_#{index+1}_id"])
+		pokemon_moves = params[:pokemon][:pokemon_moves]
+		pokemon_moves.each.with_index do |move, index|
+			move_id = move[1]
+			move_from_db = nil
+			pokemon_move = {}
+			unless move_id.blank?
+				move_from_db = Move.find(move_id)
+				puts 'Move ', move_from_db.to_json
+				pokemon_move.row_order = index+1
+				pokemon_move.current_pp = move_from_db.maximum_pp
+			end
 			pokemon_move = pokemon.pokemon_moves.build(move: move_from_db)
-			pokemon_move.row_order = index+1
-			pokemon_move.current_pp = move_from_db.maximum_pp
+			puts 'Hello ', pokemon_move.to_json
 		end
 
 		if pokemon.save

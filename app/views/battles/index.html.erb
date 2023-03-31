@@ -27,7 +27,7 @@
                 <div class="d-flex flex-row justify-content-between align-items-baseline my-1">
                     <div class="flex-grow-1">
                         <p class="m-0">
-                            <%= "Battle ID: #{battle.id}, started at #{battle.created_at.localtime.strftime('%a, %e %B %H:%M')}" %>
+                            <%= "Battle ID: #{battle.id} (#{battle.pokemon_1.name} vs #{battle.pokemon_2.name})" %>
                         </p>
                     </div>
                     <div class="flex-grow-1">
@@ -36,9 +36,17 @@
                         </p>
                     </div>
                     <div class="flex-grow-1 justify-content-end d-flex">
-                        <%= link_to 'Resume', battle_path(battle), class: "btn btn-primary mx-2 font-weight-bold" if battle.status_id == 'ongoing' %>
-                        <%= link_to 'End', battle_end_path(battle), class: "btn btn-warning mx-2 font-weight-bold" if battle.status_id == 'ongoing' %>
-                        <%= button_to 'Delete', battle_path(battle), method: :delete, class: "btn btn-danger mx-2 font-weight-bold" %>
+                        <%= link_to 'Resume', 
+                                battle_path(battle), 
+                                class: "btn btn-primary mx-2 font-weight-bold" if battle.status_id == 'ongoing' %>
+                        <%= link_to 'Finish', 
+                                battle_finish_path(battle), 
+                                class: "btn btn-warning mx-2 font-weight-bold" if battle.status_id == 'ongoing' %>
+                        <%= button_to 'Delete', 
+                                battle_path(battle), 
+                                method: :delete, 
+                                class: "btn btn-danger mx-2 font-weight-bold", 
+                                onclick: "return confirm('Are you sure?')" %>
                     </div>
                 </div>
                 <% end %>

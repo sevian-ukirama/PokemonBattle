@@ -19,6 +19,10 @@ module PokemonBattle
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
-    config.PokemonBattle = config_for(:PokemonBattle_config)
+    if File.exist?("#{Rails.root}/config/PokemonBattle_config.yml")
+      config.PokemonBattle = config_for(:PokemonBattle_config)
+    else
+      abort 'INITIALIZATION ERROR: Missing Configuration File "PokemonBattle_config.yml" at path /config. Pokemon Battle cannot start!'
+    end
   end
 end
