@@ -9,15 +9,26 @@ class BattlesController < ApplicationController
 	end
 
 	def new
-		@pokemons = Pokemon.all
-		@pokemon_moves = PokemonMove.all
-		@moves = Move.all
+		@pokemons = Pokemon.order(name: :asc).all
+		@pokemon_moves = PokemonMove.order(pokemon_id: :asc).all
+		@moves = Move.order(name: :asc).all
 	end
 
 	def create
 		battle = Battle.new
-		battle.pokemon_1_id = params[:battle][:pokemon_1_id]
-		battle.pokemon_2_id = params[:battle][:pokemon_2_id]
+		pokemon_1 = Pokemon.find(params[:battle][:pokemon_1_id])
+		pokemon_2 = Pokemon.find(params[:battle][:pokemon_2_id])
+
+		if pokemon_1.speed >= pokemon_2.speed
+			battle.pokemon_1_id = params[:battle][:pokemon_1_id]
+			battle.pokemon_2_id = params[:battle][:pokemon_2_id]
+			flash[:warning] = "#{pokemon_1.name} attacks first!"
+		else
+			battle.pokemon_1_id = params[:battle][:pokemon_2_id]
+			battle.pokemon_2_id = params[:battle][:pokemon_1_id]
+			flash[:warning] = "#{pokemon_2.name} attacks first!"
+		end
+
 		battle.status_id = 0
 		if battle.save
 			flash[:success] = "Battle starting now"
@@ -45,8 +56,11 @@ class BattlesController < ApplicationController
 	def update
 		battle = Battle.find(params[:id])
 		submitted_move_id = params[:battle][:submitted_move_id]
-		submitted_usage_pp = params[:battle][:submitted_move_pp]
 		submitted_move_row_order = params[:battle][:submitted_move_row_order]
+
+		# Prevent Pokemon hijacking other's move
+		
+
 		performer_pokemon = battle.turn_number.odd? ? battle.pokemon_1 : battle.pokemon_2
 		target_pokemon = battle.turn_number.odd? ? battle.pokemon_2 : battle.pokemon_1
 
@@ -93,7 +107,9 @@ class BattlesController < ApplicationController
 		type_chart = PokemonTypeChart.new
 		target_pokemon_resistant = type_chart.status_resistant?(move.status_effect_id, target_pokemon.type_1_id) 
 
-		if target_pokemon.status_id != move.status_effect_id && !target_pokemon_resistant
+		status_effect_hit = rand(100) < 33
+
+		if target_pokemon.status_id != move.status_effect_id && !target_pokemon_resistant && status_effect_hit
 			add_status_effect_to_pokemon(target_pokemon, move.status_effect_id)
 			check_pokemon_status(target_pokemon)
 		else
@@ -240,7 +256,8 @@ class BattlesController < ApplicationController
 		if self.zero_hp?(pokemon_1) || self.zero_available_moves?(pokemon_1)
 			battle.winner_pokemon_id = battle.pokemon_2_id
 			battle.status_id = 'finished'
-			flash[:light] = "#{pokemon_1.name} ran out of Moves!"
+			flash[:dark] = "#{pokemon_1.name} ran out of HP!" if self.zero_hp?(pokemon_1)
+			flash[:light] = "#{pokemon_1.name} ran out of Moves!" if self.zero_available_moves?(pokemon_1)
 
 			unless battle.save
 				flash[:danger] = battle.errors.full_messages[0]
@@ -248,7 +265,8 @@ class BattlesController < ApplicationController
 		elsif self.zero_hp?(pokemon_2) || self.zero_available_moves?(pokemon_2)
 			battle.winner_pokemon_id = battle.pokemon_1_id
 			battle.status_id = 'finished'
-			flash[:light] = "#{pokemon_2.name} ran out of Moves!"
+			flash[:dark] = "#{pokemon_2.name} ran out of HP!" if self.zero_hp?(pokemon_2)
+			flash[:light] = "#{pokemon_2.name} ran out of Moves!" if self.zero_available_moves?(pokemon_2)
 			
 			unless battle.save
 				flash[:danger] = battle.errors.full_messages[0]

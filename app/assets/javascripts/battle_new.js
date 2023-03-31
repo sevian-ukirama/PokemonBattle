@@ -12,18 +12,23 @@ function calc_fraction_to_percentage (numerator=0, denumerator=0) {
 	return 100*numerator/denumerator
 }
 
+function clear_heal_path (pokemon_number) {
+	let pokemon_heal_dom = DOC.querySelector(`#pokemon_${pokemon_number}_heal`)
+	pokemon_heal_dom.setAttribute('href', '#');
+	pokemon_heal_dom.classList.add('disabled');
+}
+
 function set_heal_path (pokemon, pokemon_number) {
-	heal_path = pokemon ? `/pokemons/heal/${pokemon.id}` : '#'
-	class_list = DOC.querySelector(`#pokemon_${pokemon_number}_heal`).getAttribute('class');
+	let heal_path = pokemon ? `/pokemons/heal/${pokemon.id}` : '#'
+	let pokemon_heal_dom = DOC.querySelector(`#pokemon_${pokemon_number}_heal`)
 
 	if (pokemon) {
-		class_list = class_list.replace('disabled','');
+		pokemon_heal_dom.classList.remove('disabled');
 	}else{
-		class_list = class_list.includes('disabled') ? class_list : class_list.concat('disabled');
+		pokemon_heal_dom.classList.add('disabled');
 	}
 
-	DOC.querySelector(`#pokemon_${pokemon_number}_heal`).setAttribute('href', heal_path);
-	DOC.querySelector(`#pokemon_${pokemon_number}_heal`).setAttribute('class', class_list);
+	pokemon_heal_dom.setAttribute('href', heal_path);
 }
 
 function set_form_status () {
@@ -78,9 +83,6 @@ function set_pokemon_moveset (pokemon) {
 	return moveset;
 }
 
-// console.log(pokemon_moves)
-// console.log(moves)
-
 DOC.querySelectorAll('.pokemon_select').forEach((pokemon_select)=>{
 	pokemon_select.addEventListener('change', (event) => {
 		pokemon_id = event.target.selectedIndex-1;
@@ -95,12 +97,19 @@ DOC.querySelectorAll('.pokemon_select').forEach((pokemon_select)=>{
 		set_form_status();
 		set_hp_bar(current_hp, pokemon_number);
 		set_sprite(sprite_url, pokemon_number);
+
+		clear_move_pills(pokemon_number);
+		clear_heal_path(pokemon_number);
+
+		// If Pokemon not valid, guard clause
+		if (!pokemon) { return; }
+
+		// If Pokemon valid
 		if (pokemon.current_hp < pokemon.maximum_hp) {
 			set_heal_path(pokemon, pokemon_number);
 		}
 
 		const MOVESET = set_pokemon_moveset(pokemon);
-		clear_move_pills(pokemon_number);
 		MOVESET.forEach((move, index)=>{
 			append_move_pill(pokemon_number, create_move_pill(move));
 		})

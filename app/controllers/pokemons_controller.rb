@@ -66,22 +66,20 @@ class PokemonsController < ApplicationController
 		pokemon_moves = params[:pokemon][:pokemon_moves]
 		pokemon_moves.each.with_index do |move, index|
 			move_id = move[1]
-			move_from_db = nil
-			pokemon_move = {}
 			unless move_id.blank?
 				move_from_db = Move.find(move_id)
-				puts 'Move ', move_from_db.to_json
+				pokemon_move = pokemon.pokemon_moves.build(move: move_from_db)
 				pokemon_move.row_order = index+1
 				pokemon_move.current_pp = move_from_db.maximum_pp
 			end
-			pokemon_move = pokemon.pokemon_moves.build(move: move_from_db)
-			puts 'Hello ', pokemon_move.to_json
 		end
 
-		if pokemon.save
-			flash[:success] = "Pokemons Saved"
-		else
-			flash[:danger] = pokemon.errors.full_messages[0]
+		# RecordNotUnique Rescue
+		begin
+			pokemon.save
+			flash[:success] = "#{pokemon.name} Saved"
+		rescue ActiveRecord::RecordNotUnique => e
+			flash[:danger] = "Pokemon is not allowed to have multiple same moves."
 		end
 
 		redirect_to new_pokemon_path

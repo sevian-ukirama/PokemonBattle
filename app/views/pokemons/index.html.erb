@@ -21,8 +21,9 @@
         </div>
         <div class="flex-grow-1">
             <div class="progress overflow-x-auto w-100" id="pokemon_2_maximum_hp">
-                <p class="mx-2 font-weight-bold bg-danger text-success">HP</p>
+                <p class="mx-2 font-weight-bold text-success">HP</p>
                 <div class="progress-bar bg-success" role="progressbar" id="pokemon_2_current_hp" style="width: <%= (100*pokemon.current_hp/pokemon.maximum_hp ) %>%"></div>
+                <p class="mx-2 font-weight-bold text-success"><%= pokemon.current_hp %>/<%= pokemon.maximum_hp %></p>
             </div>
         </div>
     </div>

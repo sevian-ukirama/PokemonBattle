@@ -8,11 +8,10 @@ class Pokemon < ApplicationRecord
 	# Validates for presence
 	validates :image_url, :name, :type_1_id, :maximum_hp, :current_hp, presence: true
 	validates :attack, :defense, :speed, :special_attack, :special_defense, presence: true
-	validates :move_1_id, :move_2_id, presence: true
 
 	# Validates for negative/zero value
-	validates_numericality_of :attack, :defense, :speed, :special_attack, :special_defense, greater_than: 0.0
-	validates_numericality_of :current_hp, :maximum_hp, greater_than: 0.0
+	validates_numericality_of :attack, :defense, :speed, :special_attack, :special_defense, greater_than: 0.0, on: :create
+	validates_numericality_of :current_hp, :maximum_hp, greater_than: 0.0, on: :create
 
 	enum type_id: ['Normal','Fire','Water','Grass','Electric','Ice','Fighting','Poison','Ground', 'Flying', 'Psychic', 'Bug', 'Rock', 'Ghost', 'Dragon']
 	enum status_id: ['Normal', 'Paralysis', 'Poison', 'Sleep', 'Frozen', 'Burn','Faint'], _prefix: :pokemon
