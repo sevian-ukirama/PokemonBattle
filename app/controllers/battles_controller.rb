@@ -58,18 +58,20 @@ class BattlesController < ApplicationController
 		submitted_move_id = params[:battle][:submitted_move_id]
 		submitted_move_row_order = params[:battle][:submitted_move_row_order]
 
-		# Prevent Pokemon hijacking other's move
-		
-
 		performer_pokemon = battle.turn_number.odd? ? battle.pokemon_1 : battle.pokemon_2
 		target_pokemon = battle.turn_number.odd? ? battle.pokemon_2 : battle.pokemon_1
 
 		move = performer_pokemon.moves.find_by(id: submitted_move_id)
+
+		# Prevent Pokemon hijacking other's move
+		valid_move = performer_pokemon.pokemon_moves.find_by(move_id: submitted_move_id, row_order: submitted_move_row_order)
+		valid_move = !valid_move.blank?
+
 		# If random > accuracy, not hit
 		# i.e If accuracy = 70, means move has 70% of hitting enemy
-		hit = rand(100) < move.accuracy
+		hit = rand(100) < move.accuracy if !move.blank?
 
-		if hit
+		if hit && valid_move
 			perform_hit(performer_pokemon, target_pokemon, submitted_move_id, submitted_move_row_order)
 		else
 			flash[:warning] = "Attack Missed"
