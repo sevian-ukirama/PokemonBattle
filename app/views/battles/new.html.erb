@@ -6,7 +6,7 @@
             <div class="my-3">
                 <%= form.collection_select :pokemon_1_id, @pokemons, :id, :name, { include_blank: 'Select Your Pokemon...', disabled: true }, { class: 'form-control pokemon_select', 'data-target': 1 } %>
             </div>
-            <div class="progress overflow-x-auto w-100" id="pokemon_1_maximum_hp">
+            <div class="progress border border-1 border-success overflow-x-auto w-100" id="pokemon_1_maximum_hp">
                 <p class="mx-2 font-weight-bold bg-danger text-success">HP</p>
                 <div class="progress-bar bg-success" role="progressbar" id="pokemon_1_current_hp"></div>
             </div>
@@ -25,7 +25,7 @@
             <div class="my-3">
                 <%= form.collection_select :pokemon_2_id, @pokemons, :id, :name, { include_blank: 'Select Your Pokemon...', disabled: true }, { class: 'form-control pokemon_select', 'data-target': 2 } %>
             </div>
-            <div class="progress overflow-x-auto w-100" id="pokemon_2_maximum_hp">
+            <div class="progress border border-1 border-success overflow-x-auto w-100" id="pokemon_2_maximum_hp">
                 <p class="mx-2 font-weight-bold bg-danger text-success">HP</p>
                 <div class="progress-bar bg-success" role="progressbar" id="pokemon_2_current_hp"></div>
             </div>

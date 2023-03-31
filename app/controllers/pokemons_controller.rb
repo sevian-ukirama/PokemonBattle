@@ -76,13 +76,47 @@ class PokemonsController < ApplicationController
 
 		# RecordNotUnique Rescue
 		begin
-			pokemon.save
-			flash[:success] = "#{pokemon.name} Saved"
+			unless pokemon.save
+				flash[:success] = "#{pokemon.name} Created."
+			else
+				flash[:danger] = pokemon.errors.full_messages[0]
+			end
 		rescue ActiveRecord::RecordNotUnique => e
 			flash[:danger] = "Pokemon is not allowed to have multiple same moves."
 		end
 
 		redirect_to new_pokemon_path
+	end
+
+	def show
+		@pokemon = Pokemon.find(params[:id])
+		@pokemon_moves = @pokemon.pokemon_moves
+		@types = Rails.configuration.PokemonBattle[:POKEMON_TYPES]
+		@moves = Move.all
+	end
+
+	def update
+		pokemon = Pokemon.find_by(id: params[:id])
+
+		pokemon.name = params[:pokemon][:name]
+		pokemon.image_url = params[:pokemon][:image_url]
+		pokemon.type_1_id = params[:pokemon][:type_1_id]
+		pokemon.type_2_id = params[:pokemon][:type_2_id]
+		pokemon.current_hp = params[:pokemon][:maximum_hp]
+		pokemon.maximum_hp = params[:pokemon][:maximum_hp]
+		pokemon.attack = params[:pokemon][:attack]
+		pokemon.defense = params[:pokemon][:defense]
+		pokemon.speed = params[:pokemon][:speed]
+		pokemon.special_attack = params[:pokemon][:special_attack]
+		pokemon.special_defense = params[:pokemon][:special_defense]
+		
+		if pokemon.save
+			flash[:success] = "#{pokemon.name} updates Saved."
+		else
+			flash[:danger] = pokemon.errors.full_messages[0]
+		end
+
+		redirect_to pokemon_path(pokemon)
 	end
 
 end

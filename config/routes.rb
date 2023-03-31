@@ -6,7 +6,8 @@ Rails.application.routes.draw do
   post 'battle/:id', to: 'battles#update'
   get 'pokemons/heal(/:id)', to: 'pokemons#heal', as: :pokemons_heal
   post 'pokemons/new', to: 'pokemons#create'  
-  # get 'battle/:id', to: 'battles#ongoing'  
+  post 'pokemons/:id', to: 'pokemons#update'
+
   resources :pokemons
   resources :battles, path: :battle
 end

@@ -74,7 +74,7 @@ class BattlesController < ApplicationController
 		if hit && valid_move
 			perform_hit(performer_pokemon, target_pokemon, submitted_move_id, submitted_move_row_order)
 		else
-			flash[:warning] = "Attack Missed"
+			flash[:warning] = "#{pokemon.name} attack Missed!"
 		end
 
 		next_turn_counter = 1 

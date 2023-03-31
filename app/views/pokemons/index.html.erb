@@ -20,9 +20,9 @@
             <p class="my-0 mx-1 flex-grow-1">Sp. Defense: <span class="text-success"><%= pokemon.special_defense %></span></p>
         </div>
         <div class="flex-grow-1">
-            <div class="progress overflow-x-auto w-100" id="pokemon_2_maximum_hp">
+            <div class="progress border border-1 border-success overflow-x-auto w-100">
                 <p class="mx-2 font-weight-bold text-success">HP</p>
-                <div class="progress-bar bg-success" role="progressbar" id="pokemon_2_current_hp" style="width: <%= (100*pokemon.current_hp/pokemon.maximum_hp ) %>%"></div>
+                <div class="progress-bar bg-success" role="progressbar" style="width: <%= (100*pokemon.current_hp/pokemon.maximum_hp ) %>%"></div>
                 <p class="mx-2 font-weight-bold text-success"><%= pokemon.current_hp %>/<%= pokemon.maximum_hp %></p>
             </div>
         </div>
