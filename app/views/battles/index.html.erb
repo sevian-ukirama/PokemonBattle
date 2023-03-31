@@ -27,10 +27,18 @@
                 <div class="d-flex flex-row justify-content-between align-items-baseline my-1">
                     <div class="flex-grow-1">
                         <p class="m-0">
-                            <%= "Battle ID: #{battle.id} (#{battle.pokemon_1.name} vs #{battle.pokemon_2.name})" %>
+                            <%= "Battle ID: #{battle.id} " %> (
+                            <span class="<%= 'text-success' if battle.winner_pokemon_id == battle.pokemon_1.id  %>">
+                                <%= battle.pokemon_1.name %>
+                            </span>
+                            vs
+                            <span class="<%= 'text-success' if battle.winner_pokemon_id == battle.pokemon_2.id  %>">
+                                <%= battle.pokemon_2.name %>
+                            </span>
+                            )
                         </p>
                     </div>
-                    <div class="flex-grow-1">
+                    <div class="flex-grow-1 flex flex-row">
                         <p class="m-0">
                             <%= "Status: #{battle.status_id.capitalize}" %>
                         </p>

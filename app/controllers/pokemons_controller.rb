@@ -1,5 +1,7 @@
 class PokemonsController < ApplicationController
 
+	before_action :is_pokemon_exist?, only: [:show]
+
 	def index
 		@pokemons = Pokemon.all
 	end
@@ -89,7 +91,7 @@ class PokemonsController < ApplicationController
 	end
 
 	def show
-		@pokemon = Pokemon.find(params[:id])
+		@pokemon = Pokemon.find_by(id: params[:id])
 		@pokemon_moves = @pokemon.pokemon_moves
 		@types = Rails.configuration.PokemonBattle[:POKEMON_TYPES]
 		@moves = Move.all
@@ -109,7 +111,7 @@ class PokemonsController < ApplicationController
 		pokemon.speed = params[:pokemon][:speed]
 		pokemon.special_attack = params[:pokemon][:special_attack]
 		pokemon.special_defense = params[:pokemon][:special_defense]
-		
+
 		if pokemon.save
 			flash[:success] = "#{pokemon.name} updates Saved."
 		else
@@ -117,6 +119,16 @@ class PokemonsController < ApplicationController
 		end
 
 		redirect_to pokemon_path(pokemon)
+	end
+
+	private
+
+	def is_pokemon_exist?
+		pokemon = Pokemon.find_by(id: params[:id])
+		if pokemon.blank?
+			flash[:danger] = "Pokemon Not Found"
+			redirect_to root_url
+		end
 	end
 
 end

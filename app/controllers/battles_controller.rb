@@ -1,8 +1,7 @@
 class BattlesController < ApplicationController
 	require 'Pokemon/TypeCalculation'
 
-	before_action :check_battle_status, only: [:show]
-	before_action :check_battle_winner, only: [:show]
+	before_action :check_battle_status,:check_battle_winner,:is_battle_exist?, only: [:show]
 
 	def index
 		@battles = Battle.order(created_at: :asc)
@@ -242,6 +241,14 @@ class BattlesController < ApplicationController
 	end
 
 	private
+
+	def is_battle_exist?
+		battle = Battle.find_by(id: params[:id])
+		if battle.blank?
+			flash[:danger] = "Battle Not Found"
+			redirect_to root_url
+		end
+	end
 
 	def check_battle_status
 		battle = Battle.find(params[:id])
