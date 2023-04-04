@@ -1,4 +1,5 @@
 <%= form_with(url: battle_path(@battle), scope: :battle, local: true, id: :battle) do |form| %>
+    <%= form.number_field :submitted_move_pokemon_id, hidden: true %>
     <%= form.number_field :submitted_move_id, hidden: true %>
     <%= form.number_field :submitted_move_row_order, hidden: true %>
 <div class="vh-100" style="background: url(<%= asset_path('field.jpg') %>);">
@@ -32,7 +33,8 @@
                         <%= form.button type: "button", 
                             class: 'btn btn-warning move-button font-weight-bold my-2 mx-1 flex-basis-45', 
                             disabled: pokemon_1_move.current_pp.zero?,
-                            data: { move_id: pokemon_1_move.move_id, 
+                            data: { move_pokemon_id: @pokemon_1.id,
+                                    move_id: pokemon_1_move.move_id, 
                                     move_row_order: pokemon_1_move.row_order
                             } do %>
                          <%= pokemon_1_move.move.name  %>
@@ -74,7 +76,8 @@
                         <%= form.button type: "button", 
                             class: 'btn btn-warning move-button font-weight-bold my-2 mx-1 flex-basis-45', 
                             disabled: pokemon_2_move.current_pp.zero?,
-                            data: { move_id: pokemon_2_move.move_id, 
+                            data: { move_pokemon_id: @pokemon_2.id,
+                                    move_id: pokemon_2_move.move_id, 
                                     move_row_order: pokemon_2_move.row_order
                             } do %>
                          <%= pokemon_2_move.move.name  %>

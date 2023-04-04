@@ -28,7 +28,8 @@
                     <div class="flex-grow-1">
                         <p class="m-0">
                             <%= "Battle ID: #{battle.id} " %> (
-                            <span class="<%= 'text-success' if battle.winner_pokemon_id == battle.pokemon_1.id  %>">
+                            <span 
+                                class="<%= 'text-success' if battle.winner_pokemon_id == battle.pokemon_1.id  %>">
                                 <%= battle.pokemon_1.name %>
                             </span>
                             vs

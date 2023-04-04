@@ -34,6 +34,7 @@ class BattlesController < ApplicationController
 			redirect_to battle_path(battle)
 		else
 			flash[:danger] = "#{battle.errors.full_messages[0]}."
+			flash[:warning] = "Battle Cannot Start"
 			redirect_to new_battle_path
 		end
 	end
@@ -54,6 +55,7 @@ class BattlesController < ApplicationController
 
 	def update
 		battle = Battle.find(params[:id])
+		submitted_move_pokemon_id = params[:battle][:submitted_move_pokemon_id]
 		submitted_move_id = params[:battle][:submitted_move_id]
 		submitted_move_row_order = params[:battle][:submitted_move_row_order]
 
@@ -63,17 +65,19 @@ class BattlesController < ApplicationController
 		move = performer_pokemon.moves.find_by(id: submitted_move_id)
 
 		# Prevent Pokemon hijacking other's move
-		valid_move = performer_pokemon.pokemon_moves.find_by(move_id: submitted_move_id, row_order: submitted_move_row_order)
-		valid_move = !valid_move.blank?
+		if submitted_move_pokemon_id.to_i != performer_pokemon.id.to_i
+			flash[:danger] = "Not #{target_pokemon.name}'s turn!"
+			return redirect_to battle_path(params[:id])
+		end
 
 		# If random > accuracy, not hit
 		# i.e If accuracy = 70, means move has 70% of hitting enemy
 		hit = rand(100) < move.accuracy if !move.blank?
 
-		if hit && valid_move
+		if hit
 			perform_hit(performer_pokemon, target_pokemon, submitted_move_id, submitted_move_row_order)
 		else
-			flash[:warning] = "#{pokemon.name} attack Missed!"
+			flash[:warning] = "#{performer_pokemon.name} attack Missed!"
 		end
 
 		next_turn_counter = 1 
@@ -94,6 +98,8 @@ class BattlesController < ApplicationController
 		battle.turn_number = battle.turn_number+next_turn_counter
 	end
 
+
+	# START HIT CALC
 	def perform_hit(performer_pokemon, target_pokemon, submitted_move_id, submitted_move_row_order)
 		performer_move = performer_pokemon.pokemon_moves.find_by(move_id: submitted_move_id, row_order: submitted_move_row_order)
 		move = performer_pokemon.moves.find_by(id: submitted_move_id)
@@ -127,7 +133,7 @@ class BattlesController < ApplicationController
 	end
 
 	def damage_calc(performer_pokemon, target_pokemon, move)
-		level = 1
+		level = performer_pokemon.level
 		critical = rand(100) < 22 ? 2 : 1
 
 		# If critical, flash message
@@ -137,7 +143,6 @@ class BattlesController < ApplicationController
 
 		# First part of dmg Calc
 		first_part_dmg = ((2*level*critical)/5)+2
-
 
 		power = move.power.to_i
 		
@@ -152,11 +157,12 @@ class BattlesController < ApplicationController
 								1 : 
 								type_chart.effectiveness(move.type_id, target_pokemon.type_2_id)
 
-		same_type_bonus = performer_pokemon.status_id == move.status_effect_id ? 1.5 : 1
+		same_type_bonus = (performer_pokemon.type_1_id == move.type_id) || (performer_pokemon.type_2_id == move.type_id) ?
+						 1.5 :
+						 1
 
 		# Second part of dmg Calc
 		second_part_dmg = ((first_part_dmg*power*attack/defense)/50)+2
-
 		random = rand(0.85..1)
 
 		total_dmg = second_part_dmg*same_type_bonus*type_1_effectiveness*type_2_effectiveness*random
@@ -189,11 +195,21 @@ class BattlesController < ApplicationController
 	def remove_pokemon_status_effect(pokemon)
 		pokemon.status_id = 'Normal'
 	end	
+	# END HIT CALC 
+
 
 	def end
 		@battle = Battle.find(params[:id])
 		if @battle.status_id == 'finished'
 			@winner_pokemon = @battle.winner_pokemon
+
+			# Leveling Up Flag
+			@level_up = @winner_pokemon.is_leveling_up
+			if @level_up
+				@waiting_moves = @winner_pokemon
+									.default_moves
+									.where(status: :Waiting, at_level: ...@winner_pokemon.level)
+			end
 		else
 			redirect_to battle_path(@battle)
 		end
@@ -204,11 +220,6 @@ class BattlesController < ApplicationController
 		# Only end battle if turn is more than 2
 		if battle.turn_number > 2
 			set_battle_winner(battle)
-			battle.status_id = 'finished'
-
-			unless battle.save
-				flash[:danger] = battle.errors.full_messages[0]
-			end
 			flash[:success] = "Battle #{battle.id} is now Finished. #{battle.winner_pokemon.name} is the Winner!"
 			redirect_to root_url
 		else
@@ -226,8 +237,69 @@ class BattlesController < ApplicationController
 		# Ones with higher hp percentage wins 
 		battle.winner_pokemon_id = pokemon_1_hp_percentage > pokemon_2_hp_percentage ? 
 									battle.pokemon_1.id :
-									battle.pokemon_2.id									
+									battle.pokemon_2.id	
+
+		battle.loser_pokemon_id = pokemon_1_hp_percentage > pokemon_2_hp_percentage ? 
+									battle.pokemon_2.id	:
+									battle.pokemon_1.id
+		battle.status_id = 'finished'
+
+		if battle.save
+			gain_exp(battle.winner_pokemon, battle.loser_pokemon)
+		else
+			flash[:danger] = battle.errors.full_messages[0]
+		end
 	end
+
+
+	# START LEVELING
+
+	def gain_exp(winner_pokemon, loser_pokemon)
+		base_exp = loser_pokemon.base_experience
+		level = loser_pokemon.level
+		battle_participant_count = 2
+		gained_exp = (base_exp*level)/7*1/battle_participant_count
+
+		# Set first level experience requirement
+		if winner_pokemon.next_level_experience.blank?
+			set_next_level_exp_requirement(winner_pokemon)
+		end
+
+		winner_pokemon.current_experience = winner_pokemon.current_experience+gained_exp
+		winner_pokemon.is_leveling_up = false
+		# Check is leveling Up and for View
+		while leveling_up?(winner_pokemon)
+			level_up(winner_pokemon)
+			winner_pokemon.is_leveling_up = true
+		end
+
+		unless winner_pokemon.save
+			flash[:danger] = winner_pokemon.errors.full_messages[0]
+		end
+	end
+
+	def next_level_exp(pokemon)
+		level = pokemon.level
+		type = pokemon.type_1_id.to_sym
+		growth = Rails.configuration.PokemonBattle[:GROWTH][type]
+		next_level_requirement = level*(2*(level+1))/growth
+	end
+
+	def set_next_level_exp_requirement(pokemon)
+		pokemon.next_level_experience = next_level_exp(pokemon)
+	end
+
+	def leveling_up?(pokemon)
+		pokemon.current_experience >= pokemon.next_level_experience
+	end
+
+	def level_up(pokemon)
+		pokemon.level = pokemon.level + 1
+		set_next_level_exp_requirement(pokemon)
+	end
+
+	# END LEVELING
+
 
 	def destroy
 		battle = Battle.find(params[:id])
@@ -263,23 +335,13 @@ class BattlesController < ApplicationController
 		pokemon_2 = battle.pokemon_2
 
 		if self.zero_hp?(pokemon_1) || self.zero_available_moves?(pokemon_1)
-			battle.winner_pokemon_id = battle.pokemon_2_id
-			battle.status_id = 'finished'
-			flash[:dark] = "#{pokemon_1.name} ran out of HP!" if self.zero_hp?(pokemon_1)
-			flash[:light] = "#{pokemon_1.name} ran out of Moves!" if self.zero_available_moves?(pokemon_1)
-
-			unless battle.save
-				flash[:danger] = battle.errors.full_messages[0]
-			end
+			set_battle_winner(battle)
+			flash[:dark] = "#{pokemon_1.name} ran out of HP!"
+			flash[:light] = "#{pokemon_1.name} ran out of Moves!"
 		elsif self.zero_hp?(pokemon_2) || self.zero_available_moves?(pokemon_2)
-			battle.winner_pokemon_id = battle.pokemon_1_id
-			battle.status_id = 'finished'
-			flash[:dark] = "#{pokemon_2.name} ran out of HP!" if self.zero_hp?(pokemon_2)
-			flash[:light] = "#{pokemon_2.name} ran out of Moves!" if self.zero_available_moves?(pokemon_2)
-			
-			unless battle.save
-				flash[:danger] = battle.errors.full_messages[0]
-			end
+			set_battle_winner(battle)
+			flash[:dark] = "#{pokemon_2.name} ran out of HP!"
+			flash[:light] = "#{pokemon_2.name} ran out of Moves!"
 		end
 	end
 
@@ -291,7 +353,6 @@ class BattlesController < ApplicationController
 		zero_available_moves = true
 		pokemon.pokemon_moves.each do |move|
 			zero_available_moves = !move.current_pp.zero? ? false : zero_available_moves
-			puts zero_available_moves
 		end
 		zero_available_moves
 	end

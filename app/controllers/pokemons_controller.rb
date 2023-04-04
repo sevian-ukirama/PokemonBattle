@@ -3,12 +3,12 @@ class PokemonsController < ApplicationController
 	before_action :is_pokemon_exist?, only: [:show]
 
 	def index
-		@pokemons = Pokemon.all
+		@pokemons = Pokemon.order(name: :asc)
 	end
 
 	def new
 		@moves = Move.all
-		@types = Rails.configuration.PokemonBattle[:POKEMON_TYPES]
+		@types = Rails.configuration.PokemonBattle[:TYPES]
 	end
 
 	def heal
@@ -78,7 +78,7 @@ class PokemonsController < ApplicationController
 
 		# RecordNotUnique Rescue
 		begin
-			unless pokemon.save
+			if pokemon.save
 				flash[:success] = "#{pokemon.name} Created."
 			else
 				flash[:danger] = pokemon.errors.full_messages[0]
@@ -93,7 +93,7 @@ class PokemonsController < ApplicationController
 	def show
 		@pokemon = Pokemon.find_by(id: params[:id])
 		@pokemon_moves = @pokemon.pokemon_moves
-		@types = Rails.configuration.PokemonBattle[:POKEMON_TYPES]
+		@types = Rails.configuration.PokemonBattle[:TYPES]
 		@moves = Move.all
 	end
 
@@ -119,6 +119,14 @@ class PokemonsController < ApplicationController
 		end
 
 		redirect_to pokemon_path(pokemon)
+	end
+
+	def level_up
+	end
+
+	def destroy
+		pokemons = Pokemon.all
+		pokemons.destroy_all
 	end
 
 	private

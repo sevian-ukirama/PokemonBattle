@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_03_31_080934) do
+ActiveRecord::Schema.define(version: 2023_04_04_024852) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -23,9 +23,35 @@ ActiveRecord::Schema.define(version: 2023_03_31_080934) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.bigint "winner_pokemon_id"
+    t.bigint "loser_pokemon_id"
+    t.index ["loser_pokemon_id"], name: "index_battles_on_loser_pokemon_id"
     t.index ["pokemon_1_id"], name: "index_battles_on_pokemon_1_id"
     t.index ["pokemon_2_id"], name: "index_battles_on_pokemon_2_id"
     t.index ["winner_pokemon_id"], name: "index_battles_on_winner_pokemon_id"
+  end
+
+  create_table "default_moves", force: :cascade do |t|
+    t.bigint "pokemon_id", null: false
+    t.bigint "move_id", null: false
+    t.integer "at_level"
+    t.integer "status"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["move_id"], name: "index_default_moves_on_move_id"
+    t.index ["pokemon_id"], name: "index_default_moves_on_pokemon_id"
+  end
+
+  create_table "evolutions", force: :cascade do |t|
+    t.bigint "pokemon_id", null: false
+    t.bigint "evolve_into_id", null: false
+    t.bigint "root_pokemon_id", null: false
+    t.integer "at_level"
+    t.integer "status"
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["evolve_into_id"], name: "index_evolutions_on_evolve_into_id"
+    t.index ["pokemon_id"], name: "index_evolutions_on_pokemon_id"
+    t.index ["root_pokemon_id"], name: "index_evolutions_on_root_pokemon_id"
   end
 
   create_table "moves", force: :cascade do |t|
@@ -68,12 +94,24 @@ ActiveRecord::Schema.define(version: 2023_03_31_080934) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.string "image_url"
+    t.integer "level", default: 1
+    t.text "backstory"
+    t.integer "base_experience"
+    t.integer "current_experience", default: 1
+    t.integer "next_level_experience"
+    t.boolean "is_leveling_up", default: false
     t.index ["name"], name: "index_pokemons_on_name", unique: true
   end
 
+  add_foreign_key "battles", "pokemons", column: "loser_pokemon_id"
   add_foreign_key "battles", "pokemons", column: "pokemon_1_id"
   add_foreign_key "battles", "pokemons", column: "pokemon_2_id"
   add_foreign_key "battles", "pokemons", column: "winner_pokemon_id"
+  add_foreign_key "default_moves", "moves"
+  add_foreign_key "default_moves", "pokemons"
+  add_foreign_key "evolutions", "pokemons"
+  add_foreign_key "evolutions", "pokemons", column: "evolve_into_id"
+  add_foreign_key "evolutions", "pokemons", column: "root_pokemon_id"
   add_foreign_key "pokemon_moves", "moves"
   add_foreign_key "pokemon_moves", "pokemons"
 end

@@ -1,15 +1,31 @@
 <div class="h-100 mb-5">
-    <div class="masthead d-flex flex-column align-items-center justify-content-center h-100 w-100 text-light" style="background: #192a56;">
-        <h1>Congratulations, <span class="text-warning"> <%= @winner_pokemon.name %> </span>is the Winner!</h1>
+    <div class="masthead carousel slide d-flex flex-column align-items-center justify-content-center h-100 w-100" style="background: url('<%= asset_path("bg") %>');" data-ride="carousel">
+        <h1 class="font-weight-bold">Congratulations, <span class="text-warning"> <%= @winner_pokemon.name %> </span>is the Winner!</h1>
         <%= image_tag @winner_pokemon.image_url, class: "h-50 w-25" %>
+        <% if @level_up %>
+        <div class="text-center my-2">
+            <div class="site-heading">
+                <h2 class="my-auto font-weight-bold">
+                    <span class="text-warning"> <%= @winner_pokemon.name %> </span> has leveled up to level <span class="text-warning"> <%= @winner_pokemon.level %></span>!
+                </h2>
+            </div>
+        </div>
+        <% end %>
+
+        <div class="progress border border-1 border-primary overflow-x-auto w-50" id="pokemon_1_maximum_hp">
+            <p class="mx-2 font-weight-bold text-primary">Level <%= @winner_pokemon.level %></p>
+            <div class="progress-bar bg-primary" role="progressbar" id="pokemon_1_current_hp" style="width: <%= 100*@winner_pokemon.current_experience/@winner_pokemon.next_level_experience %>%">
+            </div>
+        </div>
         <hr class="border border-3 border-light w-75">
         <div class="text-center">
             <div class="site-heading">
                 <h2 class="my-auto font-weight-bold">The battle ended at <%= @battle.updated_at.localtime.strftime('%a, %e %B %H:%M') %></h2>
             </div>
             <div class="site-heading my-2">
-                <%= link_to 'Back to Home', root_url, class: "btn btn-light text-dark font-weight-bold px-5 py-2" %>
+                <%= link_to 'Back to Home', root_url, class: "btn btn-primary font-weight-bold px-5 py-2" %>
             </div>
         </div>
     </div>
 </div>
+<script type="text/javascript">var level_up = '<%= @level_up %>'.toLowerCase() === 'true' </script>

@@ -11,3 +11,4 @@ Rails.application.routes.draw do
   resources :pokemons
   resources :battles, path: :battle
 end
+

@@ -2,6 +2,7 @@ class Battle < ApplicationRecord
 	belongs_to :pokemon_1, class_name: 'Pokemon'
 	belongs_to :pokemon_2, class_name: 'Pokemon'
 	belongs_to :winner_pokemon, class_name: 'Pokemon', optional: true
+	belongs_to :loser_pokemon, class_name: 'Pokemon', optional: true
 
 	# Connects to Pokemon_Moves, through Pokemons
 	# Flow: Battle > Pokemons > Pokemon_Moves

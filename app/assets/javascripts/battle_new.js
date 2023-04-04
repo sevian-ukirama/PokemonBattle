@@ -1,6 +1,7 @@
 const DOC = document
-function set_hp_bar (current_hp_percentage=false, pokemon_number) {
+function set_hp_bar (current_hp_percentage, pokemon_number) {
 	current_hp_percentage = current_hp_percentage || 0;	
+
 	DOC.querySelector(`#pokemon_${pokemon_number}_current_hp`).setAttribute('style', `width: ${current_hp_percentage}%;`)
 }
 function set_sprite (sprite_url=false, pokemon_number) {
@@ -89,8 +90,9 @@ DOC.querySelectorAll('.pokemon_select').forEach((pokemon_select)=>{
 		pokemon_number = event.target.dataset.target;
 		pokemon = pokemons[pokemon_id];
 
+		maximum_hp = pokemon.maximum_hp;
 		current_hp = pokemon_id !== -1 ? 
-			calc_fraction_to_percentage(pokemon.current_hp, pokemon.maximum_hp) :
+			calc_fraction_to_percentage(pokemon.current_hp, maximum_hp) :
 			0;
 		sprite_url = pokemon_id !== -1 ? pokemon.image_url : false;
 
