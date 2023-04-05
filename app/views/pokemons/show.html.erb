@@ -4,13 +4,20 @@
         <h1 class="my-auto font-weight-bold"><%= @pokemon.name %></h1>
         <%= form.submit 'SAVE', class: "btn btn-primary px-4 py-2 font-weight-bold" %>
     </header>
-    <div class="d-flex flex-row align-items-baseline justify-content-center flex-wrap bg-light">
+    <div class="d-flex flex-column align-items-center justify-content-center flex-wrap bg-light">
         <div class="progress border border-1 border-success overflow-x-auto w-100">
             <p class="mx-2 font-weight-bold text-success">HP</p>
             <div class="progress-bar bg-success" role="progressbar" style="width: <%= (100*@pokemon.current_hp/@pokemon.maximum_hp ) %>%"></div>
             <p class="mx-2 font-weight-bold text-success"><%= @pokemon.current_hp %>/<%= @pokemon.maximum_hp %></p>
         </div>
-        <%= image_tag @pokemon.image_url, id: 'pokemon_1_sprite', class: 'w-25 h-75', alt: asset_path('pokeball.png') %>
+        <div class="d-flex w-100">
+            <p class="badge bg-light border border-success text-dark my-1">
+                Status: 
+                <%= @pokemon.status_id %>
+            </p>
+        </div>
+        <%= image_tag @pokemon.image_url, id: 'pokemon_1_sprite', class: 'w-25 h-50', alt: asset_path('pokeball.png') %>
+        <h5><%= @pokemon.backstory %></h5>
     </div>
     <div class="d-flex flex-row align-items-baseline justify-content-center flex-wrap bg-light">
         <div class="flex-grow-1 text-left font-weight-bold border-right border-3 px-3 py-5">
@@ -22,13 +29,13 @@
 
                 <%= form.label :type_1_id, class: "mx-1 mt-2" %>
                 <%= form.select :type_1_id, 
-                    options_for_select(@types.map { |t| [t[1], t[0]] }, selected: @pokemon.type_1_id), 
-                    { include_blank: "-", selected: 'Fire' }, 
+                    options_for_select(@types.map { |t| [t[1], t[1]] }, selected: @pokemon.type_1_id), 
+                    { include_blank: "-"}, 
                     { class: "form-control", required: true } %>
 
                 <%= form.label :type_2_id, class: "mx-1 mt-2" %>
                 <%= form.select :type_2_id,
-                    options_for_select(@types.map { |t| [t[1], t[0]] }, selected: @pokemon.type_2_id), 
+                    options_for_select(@types.map { |t| [t[1], t[1]] }, selected: @pokemon.type_2_id), 
                     { include_blank: '-' }, 
                     { class: 'form-control' } %>
 
@@ -57,17 +64,14 @@
         <div class="flex-grow-1 text-left font-weight-bold px-3 py-5">
             <div class="border-2">
 
-            <%= form.label :move_id, 'Move 1', class: "mx-1" %>
-            <%= form.text_field :move_id, class: "form-control", value: "#{@moves[0]&.name} (#{@pokemon_moves[0]&.current_pp}/#{@moves[0]&.maximum_pp})", disabled: true %>
+            <% 4.times.with_index do |index| %>
 
-            <%= form.label :move_id, 'Move 2', class: "mx-1 mt-2" %>
-            <%= form.text_field :move_id, class: "form-control", value: "#{@moves[1]&.name} (#{@pokemon_moves[1]&.current_pp}/#{@moves[1]&.maximum_pp})", disabled: true %>
+            <%= form.label :move_id, "Move #{index+1}", class: "mx-1" %>
+            <%= form.collection_select "moves[move_#{index+1}_id]", @moves, :id, :name,  
+                    { include_blank: '-', selected: "#{@pokemon_moves[index]&.move_id}", multiple: true }, 
+                    { class: 'form-control' } %>
 
-            <%= form.label :move_id, 'Move 3', class: "mx-1 mt-2" %>
-            <%= form.text_field :move_id, class: "form-control", value: "#{@moves[2]&.name} (#{@pokemon_moves[2]&.current_pp}/#{@moves[2]&.maximum_pp})", disabled: true %>
-
-            <%= form.label :move_id, 'Move 4', class: "mx-1 mt-2" %>
-            <%= form.text_field :move_id, class: "form-control", value: "#{@moves[3]&.name} (#{@pokemon_moves[3]&.current_pp}/#{@moves[3]&.maximum_pp})", disabled: true %>
+            <% end %>
             </div>
         </div>
     </div>

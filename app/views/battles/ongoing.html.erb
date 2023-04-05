@@ -2,10 +2,10 @@
     <%= form.number_field :submitted_move_pokemon_id, hidden: true %>
     <%= form.number_field :submitted_move_id, hidden: true %>
     <%= form.number_field :submitted_move_row_order, hidden: true %>
-<div class="vh-100" style="background: url(<%= asset_path('field.jpg') %>);">
-    <div class="d-flex flex-column justify-content-center h-100 py-5 flex-wrap bg-ice">
-        <div class="flex-grow-1 flex-basis-50">
-            <div class="flex-grow-1 text-center text-light font-weight-bold border-right border-3 py-5 px-3">
+<div class="h-100" style="background: url(<%= asset_path('field.jpg') %>);">
+    <div class="d-flex flex-row justify-content-center h-100 py-5 flex-wrap bg-ice">
+        <div class="flex-grow-1 flex-basis-50 h-100 w-50">
+            <div class="flex-grow-1 text-center text-light font-weight-bold border-right border-3 py-3 px-3">
                 <p>P L A Y E R &nbsp;1</p>
                 <div class="my-3">
                     <h1><%= @pokemon_1.name %></h1>
@@ -21,11 +21,11 @@
                     <p class="mx-2 font-weight-bold text-success">Status</p>
                     <p class="mx-2 font-weight-bold text-dark"><%= @pokemon_1.status_id %></p>
                 </div>
-                <div class="my-5">
-                    <%= image_tag @pokemon_1.image_url, id: 'pokemon_1_sprite', class: 'w-25 h-50' %>
+                <div class="my-0">
+                    <%= image_tag @pokemon_1.image_url, id: 'pokemon_1_sprite', class: 'w-50 h-75' %>
                 </div>
             </div>
-            <div class="flex-grow-1 text-center text-light font-weight-bold border-right border-3 py-5 px-3">
+            <div class="flex-grow-1 text-center text-light font-weight-bold border-right border-3 h-25 px-3">
                 <hr class="border border-light">
                 <div class="d-flex justify-content-between flex-wrap">
                 <% if @battle.turn_number.odd? %>
@@ -38,7 +38,8 @@
                                     move_row_order: pokemon_1_move.row_order
                             } do %>
                          <%= pokemon_1_move.move.name  %>
-                         <%= "(#{pokemon_1_move.current_pp}/#{pokemon_1_move.move.maximum_pp})" %>
+                         <br>
+                         <%= "PP (#{pokemon_1_move.current_pp}/#{pokemon_1_move.move.maximum_pp}) | #{pokemon_1_move.move.status_effect_id} | Hit #{pokemon_1_move.move.accuracy}%" %>
                         <% end %>
                     <% end %>
                 <% else %>
@@ -47,8 +48,8 @@
                 </div>
             </div>
         </div>
-        <div class="flex-grow-1 flex-basis-50">
-            <div class="flex-grow-1 text-center text-light font-weight-bold border-right border-3 py-5 px-3">
+        <div class="flex-grow-1 flex-basis-50 h-100 w-50">
+            <div class="flex-grow-1 text-center text-light font-weight-bold py-3 px-3">
                 <p>P L A Y E R &nbsp;2</p>
                 <div class="my-3">
                     <h1><%= @pokemon_2.name %></h1>
@@ -64,13 +65,12 @@
                     <p class="mx-2 font-weight-bold text-success">Status</p>
                     <p class="mx-2 font-weight-bold text-dark"><%= @pokemon_2.status_id %></p>
                 </div>
-                <div class="my-5">
-                    <%= image_tag @pokemon_2.image_url, id: 'pokemon_2_sprite', class: 'w-25 h-50' %>
+                <div class="my-0">
+                    <%= image_tag @pokemon_2.image_url, id: 'pokemon_2_sprite', class: 'w-50 h-75' %>
                 </div>
             </div>
-            
-            <div class="flex-grow-1 text-center text-light font-weight-bold border-right border-3 py-5 px-3">
-                <hr class="border border-light">
+            <div class="flex-grow-1 text-center text-light font-weight-bold h-25 px-3">
+                <hr class="border border-3 border-light">
                 <div class="d-flex justify-content-between flex-wrap">
                 <% if @battle.turn_number.even? %>
                     <% @pokemon_2_moves.each do |pokemon_2_move| %>
@@ -82,7 +82,8 @@
                                     move_row_order: pokemon_2_move.row_order
                             } do %>
                          <%= pokemon_2_move.move.name  %>
-                         <%= "(#{pokemon_2_move.current_pp}/#{pokemon_2_move.move.maximum_pp})" %>
+                         <br>
+                         <%= "PP (#{pokemon_2_move.current_pp}/#{pokemon_2_move.move.maximum_pp}) | #{pokemon_2_move.move.status_effect_id} | Hit #{pokemon_2_move.move.accuracy}%" %>
                         <% end %>
                     <% end %>
                 <% else %>

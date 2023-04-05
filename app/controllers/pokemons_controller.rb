@@ -2,7 +2,7 @@ class PokemonsController < ApplicationController
 
 	before_action :is_pokemon_exist?, only: [:show]
 
-	def index
+	def pokedex
 		@pokemons = Pokemon.order(name: :asc)
 	end
 
@@ -65,7 +65,7 @@ class PokemonsController < ApplicationController
 		pokemon.special_attack = params[:pokemon][:special_attack]
 		pokemon.special_defense = params[:pokemon][:special_defense]
 
-		pokemon_moves = params[:pokemon][:pokemon_moves]
+		pokemon_moves = params[:pokemon][:moves]
 		pokemon_moves.each.with_index do |move, index|
 			move_id = move[1]
 			unless move_id.blank?
@@ -112,10 +112,31 @@ class PokemonsController < ApplicationController
 		pokemon.special_attack = params[:pokemon][:special_attack]
 		pokemon.special_defense = params[:pokemon][:special_defense]
 
-		if pokemon.save
-			flash[:success] = "#{pokemon.name} updates Saved."
-		else
-			flash[:danger] = pokemon.errors.full_messages[0]
+		pokemon_moves = pokemon.pokemon_moves
+		pokemon_moves.each do |move|
+			move.destroy
+		end
+
+		pokemon_moves = params[:pokemon][:moves]
+		pokemon_moves.each.with_index do |move, index|
+			move_id = move[1]
+			unless move_id.blank?
+				move_from_db = Move.find(move_id)
+				pokemon_move = pokemon.pokemon_moves.build(move: move_from_db)
+				pokemon_move.row_order = index+1
+				pokemon_move.current_pp = move_from_db.maximum_pp
+			end
+		end
+
+		# RecordNotUnique Rescue
+		begin
+			if pokemon.save
+				flash[:success] = "#{pokemon.name} Updated."
+			else
+				flash[:danger] = pokemon.errors.full_messages[0]
+			end
+		rescue ActiveRecord::RecordNotUnique => e
+			flash[:danger] = "Pokemon is not allowed to have multiple same moves."
 		end
 
 		redirect_to pokemon_path(pokemon)

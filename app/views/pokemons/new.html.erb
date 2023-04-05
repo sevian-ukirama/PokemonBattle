@@ -48,25 +48,12 @@
         <div class="flex-grow-1 text-left font-weight-bold px-3 py-5">
             <div class="border-2">
 
-            <%= form.label :move_id, 'Move 1', class: "mx-1" %>
-            <%= form.collection_select 'pokemon_moves[move_1_id]', @moves, :id, :name,  
-                    { include_blank: '-', selected: nil }, 
-                    { class: 'form-control', required: true } %>
-
-            <%= form.label :move_id, 'Move 2', class: "mx-1 mt-2" %>
-            <%= form.collection_select 'pokemon_moves[move_2_id]', @moves, :id, :name,  
-                    { include_blank: '-', selected: nil }, 
-                    { class: 'form-control', required: true } %>
-
-            <%= form.label :move_id, 'Move 3', class: "mx-1 mt-2" %>
-            <%= form.collection_select 'pokemon_moves[move_3_id]', @moves, :id, :name,  
-                    { include_blank: '-', selected: nil }, 
-                    { class: 'form-control' } %>
-
-            <%= form.label :move_id, 'Move 4', class: "mx-1 mt-2" %>
-            <%= form.collection_select 'pokemon_moves[move_4_id]', @moves, :id, :name,  
-                    { include_blank: '-', selected: nil }, 
-                    { class: 'form-control' } %>
+            <% 4.times.with_index do |index| %>
+                <%= form.label :move_id, "Move #{index+1}", class: "mx-1" %>
+                <%= form.collection_select "moves[move_#{index+1}_id]", @moves, :id, :name,  
+                        { include_blank: '-', selected: nil }, 
+                        { class: 'form-control', required: true } %>
+            <% end %>
             </div>
         </div>
     </div>

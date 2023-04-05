@@ -9,7 +9,26 @@ class BattlesController < ApplicationController
 
 	def new
 		@pokemons = Pokemon.order(name: :asc).all
-		@pokemon_moves = PokemonMove.joins(:move).order(pokemon_id: :asc).all
+
+		# pokemon_moves = PokemonMove.joins(:pokemon).joins(:move).order(pokemon_id: :asc).all
+
+		@pokemon_moves = {}
+
+		@pokemons.each do |pokemon|
+			pokemon_moves = pokemon.pokemon_moves
+			if !pokemon_moves.blank?
+				@pokemon_moves[pokemon.name] = {}
+				pokemon_moves.each do |move|
+					 @pokemon_moves[pokemon.name].merge({
+						"Name" => {
+							'current_pp': move.current_pp,
+							'maximum_pp': move.move.maximum_pp
+						} 
+					})
+				end
+			end
+		end
+		puts 'MOVES: ', @pokemon_moves['Bayleef'][:pokemon_moves]
 	end
 
 	def create
@@ -45,7 +64,6 @@ class BattlesController < ApplicationController
 			@pokemon_2 = @battle.pokemon_2
 			@pokemon_1_moves = @pokemon_1.pokemon_moves.order(row_order: :asc).joins(:move).order(name: :asc).all
 			@pokemon_2_moves = @pokemon_2.pokemon_moves.order(row_order: :asc).joins(:move).order(name: :asc).all
-
 			render 'ongoing'
 		else
 			redirect_to battle_end_path

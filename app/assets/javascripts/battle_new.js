@@ -76,11 +76,11 @@ function create_move_pill (move) {
 }
 
 function set_pokemon_moveset (pokemon) {
-	moveset = pokemon_moves.filter(move => move.pokemon_id == pokemon.id);
-	moveset.forEach((move, index)=>{
-		move.name = moves[index].name
-		move.maximum_pp = moves[index].maximum_pp
-	})
+	moveset = moves.filter(move => move.pokemon_id == pokemon.id);
+	// moveset.forEach((move, index)=>{
+	// 	move.name = moves[index].name
+	// 	move.maximum_pp = moves[index].maximum_pp
+	// })
 	return moveset;
 }
 
@@ -110,6 +110,8 @@ DOC.querySelectorAll('.pokemon_select').forEach((pokemon_select)=>{
 		if (pokemon.current_hp < pokemon.maximum_hp) {
 			set_heal_path(pokemon, pokemon_number);
 		}
+		
+		console.log(moves)
 
 		const MOVESET = set_pokemon_moveset(pokemon);
 		MOVESET.forEach((move, index)=>{
