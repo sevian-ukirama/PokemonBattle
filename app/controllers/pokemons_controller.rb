@@ -121,7 +121,32 @@ class PokemonsController < ApplicationController
 		redirect_to pokemon_path(pokemon)
 	end
 
-	def level_up
+	def learn_moves
+		pokemon = Pokemon.find_by(id: params[:id])
+		waiting_moves = params[:waiting].each.filter {|k,v| v.to_i == 1}
+		learned_moves = params[:learned].each.filter {|k,v| v.to_i == 1}
+
+		learned_moves.each.with_index do |move, index|
+			if !waiting_moves[index].blank? && index < 4
+				waiting_move = pokemon.default_moves.joins(:move).find_by(move: waiting_moves[index][0]) 
+
+				if !waiting_move.blank?
+					learned_move = pokemon.pokemon_moves.find_by(move: move[0])
+
+					learned_move.update(move_id: waiting_move.move.id, current_pp: waiting_move.move.maximum_pp)
+					waiting_move.update(status: 'Accepted')
+				end
+			end
+		end
+
+		waiting_moves.each do |move|
+			waiting_move = pokemon.default_moves.find_by(move: move[0])
+			if waiting_move.Waiting?
+				waiting_move.update(status: 'Rejected')
+			end
+		end
+
+		redirect_to root_url
 	end
 
 	def destroy

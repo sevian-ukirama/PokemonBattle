@@ -9,8 +9,7 @@ class BattlesController < ApplicationController
 
 	def new
 		@pokemons = Pokemon.order(name: :asc).all
-		@pokemon_moves = PokemonMove.order(pokemon_id: :asc).all
-		@moves = Move.order(name: :asc).all
+		@pokemon_moves = PokemonMove.joins(:move).order(pokemon_id: :asc).all
 	end
 
 	def create
@@ -114,7 +113,8 @@ class BattlesController < ApplicationController
 		type_chart = PokemonTypeChart.new
 		target_pokemon_resistant = type_chart.status_resistant?(move.status_effect_id, target_pokemon.type_1_id) 
 
-		status_effect_hit = rand(100) < 33
+
+		status_effect_hit = rand(100) < 45
 
 		if target_pokemon.status_id != move.status_effect_id && !target_pokemon_resistant && status_effect_hit
 			add_status_effect_to_pokemon(target_pokemon, move.status_effect_id)
@@ -202,13 +202,19 @@ class BattlesController < ApplicationController
 		@battle = Battle.find(params[:id])
 		if @battle.status_id == 'finished'
 			@winner_pokemon = @battle.winner_pokemon
+			@learned_moves = @winner_pokemon.pokemon_moves
 
 			# Leveling Up Flag
 			@level_up = @winner_pokemon.is_leveling_up
+			current_exp = @winner_pokemon.current_experience
+			next_level_exp = @winner_pokemon.next_level_experience
+			prev_level_exp = previous_level_exp(@winner_pokemon)
+			@current_exp_percentage = 100*(current_exp-prev_level_exp)/(next_level_exp-prev_level_exp)
 			if @level_up
 				@waiting_moves = @winner_pokemon
 									.default_moves
 									.where(status: :Waiting, at_level: ...@winner_pokemon.level)
+									.joins(:move)
 			end
 		else
 			redirect_to battle_path(@battle)
@@ -271,6 +277,7 @@ class BattlesController < ApplicationController
 		while leveling_up?(winner_pokemon)
 			level_up(winner_pokemon)
 			winner_pokemon.is_leveling_up = true
+			puts "LEVELED UP!"
 		end
 
 		unless winner_pokemon.save
@@ -285,6 +292,13 @@ class BattlesController < ApplicationController
 		next_level_requirement = level*(2*(level+1))/growth
 	end
 
+	def previous_level_exp(pokemon)
+		level = pokemon.level-1
+		type = pokemon.type_1_id.to_sym
+		growth = Rails.configuration.PokemonBattle[:GROWTH][type]
+		previous_level_requirement = level*(2*(level+1))/growth
+	end
+
 	def set_next_level_exp_requirement(pokemon)
 		pokemon.next_level_experience = next_level_exp(pokemon)
 	end
@@ -295,7 +309,16 @@ class BattlesController < ApplicationController
 
 	def level_up(pokemon)
 		pokemon.level = pokemon.level + 1
+		gain_stats(pokemon)
 		set_next_level_exp_requirement(pokemon)
+	end
+
+	def gain_stats(pokemon)
+		pokemon.attack += (pokemon.attack.to_i/50.to_f).ceil
+		pokemon.defense += (pokemon.defense.to_i/50.to_f).ceil
+		pokemon.speed += (pokemon.speed.to_i/50.to_f).ceil
+		pokemon.special_attack += (pokemon.special_attack.to_i/50.to_f).ceil
+		pokemon.special_defense += (pokemon.special_defense.to_i/50.to_f).ceil
 	end
 
 	# END LEVELING

@@ -1,5 +1,5 @@
-<div class="h-100 mb-5">
-    <div class="masthead carousel slide d-flex flex-column align-items-center justify-content-center h-100 w-100" style="background: url('<%= asset_path("bg") %>');" data-ride="carousel">
+<div class="mb-5">
+    <div class="masthead carousel slide d-flex flex-column align-items-center justify-content-center py-5 h-100 w-100" style="background: url('<%= asset_path("bg") %>');">
         <h1 class="font-weight-bold">Congratulations, <span class="text-warning"> <%= @winner_pokemon.name %> </span>is the Winner!</h1>
         <%= image_tag @winner_pokemon.image_url, class: "h-50 w-25" %>
         <% if @level_up %>
@@ -14,10 +14,51 @@
 
         <div class="progress border border-1 border-primary overflow-x-auto w-50" id="pokemon_1_maximum_hp">
             <p class="mx-2 font-weight-bold text-primary">Level <%= @winner_pokemon.level %></p>
-            <div class="progress-bar bg-primary" role="progressbar" id="pokemon_1_current_hp" style="width: <%= 100*@winner_pokemon.current_experience/@winner_pokemon.next_level_experience %>%">
+            <div class="progress-bar bg-primary" role="progressbar" id="pokemon_1_current_hp" style="width: <%= @current_exp_percentage %>%;">
             </div>
         </div>
-        <hr class="border border-3 border-light w-75">
+        <% if !@waiting_moves.blank? && @level_up %>
+
+        <%= form_with(url: learn_move_path(@winner_pokemon), scope: :moves, local: true) do |form| %>
+        <div class="text-center my-3">
+            <!-- Waiting Moves -->
+            <div class="site-heading">
+                <h2 class="my-auto font-weight-bold">and wants to learn new <%= 'move'.pluralize(@waiting_moves) %></h2>
+            </div>
+            <div class="site-heading my-2">
+                <% @waiting_moves.each do |waiting_move| %>
+                    <%= form.check_box waiting_move.move.id, class: "hidden", hidden:true, name: "waiting[#{waiting_move.move.id}]" %>
+                    <%= form.label waiting_move.move.id, waiting_move.move.name, 
+                        class: "btn btn-outline-warning text-dark font-weight-bold px-5 py-2 waiting-moves", 
+                        onclick:"this.classList.toggle('btn-warning');" %>
+                <% end %>
+            </div>
+
+            <!-- Learned Moves -->
+            <div class="site-heading mt-3">
+                <h2 class="my-auto font-weight-bold">Which <%= 'move'.pluralize(@learned_moves) %> to replace?</h2>
+            </div>
+            <div class="site-heading my-2">
+                <% @learned_moves.each do |learned_move| %>
+                    <%= form.check_box learned_move.move.id, class: "hidden", hidden:true, name: "learned[#{learned_move.move.id}]" %>
+                    <%= form.label learned_move.move.id, learned_move.move.name, 
+                        class: "btn btn-outline-info text-dark font-weight-bold px-5 py-2 learned-moves", 
+                        onclick:"this.classList.toggle('btn-info');" %>
+                <% end %>
+            </div>
+
+            <div class="site-heading">
+                <p class="font-weight-bold">Select which to learn (max. 4 moves) or nothing skip.</p>
+            </div>
+            <div class="site-heading">
+                <%= form.submit 'S A V E', class: "btn btn-primary px-4 py-2 font-weight-bold" %>
+            </div>
+        </div>
+        <% end %>
+
+        <% else %>
+
+        <hr class="border border-3 border-dark w-75">
         <div class="text-center">
             <div class="site-heading">
                 <h2 class="my-auto font-weight-bold">The battle ended at <%= @battle.updated_at.localtime.strftime('%a, %e %B %H:%M') %></h2>
@@ -26,6 +67,7 @@
                 <%= link_to 'Back to Home', root_url, class: "btn btn-primary font-weight-bold px-5 py-2" %>
             </div>
         </div>
+        <% end %>
     </div>
 </div>
 <script type="text/javascript">var level_up = '<%= @level_up %>'.toLowerCase() === 'true' </script>

@@ -17,3 +17,5 @@ DOC.querySelectorAll('.move-button').forEach((button)=>{
 		DOC.querySelector('#battle').submit();
 	}
 })
+
+
