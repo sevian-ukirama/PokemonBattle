@@ -24,4 +24,5 @@
 .flex-basis-50 { flex-basis:50%; }
 .flex-basis-100 { flex-basis:100% }
 .bg-ice { background: rgba(0, 0, 0, .6); }
+.grayscale { filter: grayscale(100%); }
 /*.masthead { background: #192a56; }*/

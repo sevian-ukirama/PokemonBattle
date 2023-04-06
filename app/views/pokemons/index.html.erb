@@ -1,34 +1,31 @@
-<div class="vh-100" style="background: #192a56;">
-    <header class="masthead d-flex flex-row align-items-center justify-content-between py-2 px-5 w-100 text-light">
-        <h1 class="">Pokedex</h1>
+<div style="background: url('<%= asset_path("bg") %>');">
+    <header class="masthead d-flex flex-row align-items-center justify-content-between pt-5 px-5 w-100 text-dark">
+        <h1 class="font-weight-bold">Pokedex</h1>
         <div class="justify-content-end">
-            <%= link_to 'New Pokemon', pokemons_new_path, class: "btn btn-success font-weight-bold mx-2" %>
-            <%= link_to 'Heal All', pokemons_heal_path, class: "btn btn-light font-weight-bold text-success mx-2" %>
+            <%= link_to 'New Pokemon', new_pokemon_path, class: "btn btn-outline-success font-weight-bold mx-2" %>
+            <%= link_to 'Heal All', pokedex_heal_path, class: "btn btn-success font-weight-bold mx-2" %>
         </div>
     </header>
     <hr class="border border-3 border-light w-75 mx-auto">
-    <div class="d-flex flex-column justify-content-between overflow-auto h-75 align-content-center text-light font-weight-bold px-5 py-1">
+    <div class="d-flex flex-row flex-wrap justify-content-start align-content-center text-dark font-weight-bold px-5 py-3">
+
     <% @pokemons.each do |pokemon| %>
-        <div class="d-flex flex-row justify-content-between align-content-center text-light font-weight-bold px-5 py-1">
-            <div class="flex-grow-1 flex-basis-10">
-                <%= link_to pokemon.name, pokemon_path(pokemon), class: "my-0 mx-1 flex-grow-1 text-light font-weight-bold text-decoration-none" %>
-                
-            </div>
-            <div class="flex-grow-1 d-flex flex-row text-start">
-                <p class="my-0 mx-1 flex-grow-1">Speed: <span class="text-success"><%= pokemon.speed %></span></p>
-                <p class="my-0 mx-1 flex-grow-1">Attack: <span class="text-success"><%= pokemon.attack %></span></p>
-                <p class="my-0 mx-1 flex-grow-1">Defense: <span class="text-success"><%= pokemon.defense %></span></p>
-                <p class="my-0 mx-1 flex-grow-1">Sp. Attack: <span class="text-success"><%= pokemon.special_attack %></span></p>
-                <p class="my-0 mx-1 flex-grow-1">Sp. Defense: <span class="text-success"><%= pokemon.special_defense %></span></p>
-            </div>
-            <div class="flex-grow-1">
-                <div class="progress border border-1 border-success overflow-x-auto w-100">
+        <div class="card w-25 pt-3">
+            <%= image_tag pokemon.image_url, class: 'w-25 mx-auto', onerror: "this.src=#{asset_path('pokeball.png')}" %>
+          <div class="card-body">
+            <div class="card-title">
+                <h5><%= pokemon.name %></h5>
+                <div class="progress border border-1 border-success card-text overflow-x-auto w-100">
                     <p class="mx-2 font-weight-bold text-success">HP</p>
                     <div class="progress-bar bg-success" role="progressbar" style="width: <%= (100*pokemon.current_hp/pokemon.maximum_hp ) %>%"></div>
                     <p class="mx-2 font-weight-bold text-success"><%= pokemon.current_hp %>/<%= pokemon.maximum_hp %></p>
                 </div>
+            
             </div>
+                <%= link_to "See Detail", pokemon_path(pokemon), class: "btn btn-primary" %>
+          </div>
         </div>
     <% end %>
+
     </div>
 </div>

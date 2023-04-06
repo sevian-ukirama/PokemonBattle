@@ -1,4 +1,4 @@
-<%= form_with(url: new_pokemon_path, scope: :pokemon, local: true) do |form| %>
+<%= form_with(url: pokemons_path, scope: :pokemon, local: true) do |form| %>
 <div class="container vh-100">
     <header class="masthead d-flex flex-row align-items-center justify-content-between py-3">
         <h1 class="my-auto font-weight-bold">Create New Pokemon</h1>
@@ -14,12 +14,12 @@
                 <%= form.text_field :name, class: "form-control", required: true %>
 
                 <%= form.label :type_1_id, class: "mx-1 mt-2" %>
-                <%= form.select :type_1_id, options_for_select(@types.map { |t| [t[1], t[0]] }, '-'), 
+                <%= form.select :type_1_id, options_for_select(@types.map { |t| [t[1], t[1]] }, '-'), 
                     { include_blank: "-" }, 
                     { class: "form-control", required: true } %>
 
                 <%= form.label :type_2_id, class: "mx-1 mt-2" %>
-                <%= form.select :type_2_id, options_for_select(@types.map { |t| [t[1], t[0]] }, '-'), 
+                <%= form.select :type_2_id, options_for_select(@types.map { |t| [t[1], t[1]] }, '-'), 
                     { include_blank: '-' }, 
                     { class: 'form-control' } %>
 
@@ -52,7 +52,7 @@
                 <%= form.label :move_id, "Move #{index+1}", class: "mx-1" %>
                 <%= form.collection_select "moves[move_#{index+1}_id]", @moves, :id, :name,  
                         { include_blank: '-', selected: nil }, 
-                        { class: 'form-control', required: true } %>
+                        { class: 'form-control' } %>
             <% end %>
             </div>
         </div>

@@ -1,8 +1,10 @@
 class PokemonsController < ApplicationController
+	require 'Pokemon/Evolution'
+	require 'Pokemon/LearnMove'
 
-	before_action :is_pokemon_exist?, only: [:show]
+	before_action :is_pokemon_exist?, except: [:create]
 
-	def pokedex
+	def index
 		@pokemons = Pokemon.order(name: :asc)
 	end
 
@@ -29,7 +31,6 @@ class PokemonsController < ApplicationController
 			end
 
 			flash[:success] = 'All Pokemon has been Healed'
-			redirect_to pokemons_path
 		else
 			pokemon = Pokemon.find(params[:id])
 			pokemon.current_hp = pokemon.maximum_hp
@@ -44,16 +45,16 @@ class PokemonsController < ApplicationController
 			end
 
 			flash[:success] = "#{pokemon.name} has been Healed"
-			redirect_to new_battle_path
 		end
 
+		redirect_back(fallback_location: root_url)
 	end
 
 	def create
 		# Build first, only one save, Nested should follow 
 		pokemon = Pokemon.new
 
-		pokemon.name = params[:pokemon][:name]
+		pokemon.name = params[:pokemon][:name].capitalize
 		pokemon.image_url = params[:pokemon][:image_url]
 		pokemon.type_1_id = params[:pokemon][:type_1_id]
 		pokemon.type_2_id = params[:pokemon][:type_2_id]
@@ -66,7 +67,7 @@ class PokemonsController < ApplicationController
 		pokemon.special_defense = params[:pokemon][:special_defense]
 
 		pokemon_moves = params[:pokemon][:moves]
-		pokemon_moves.each.with_index do |move, index|
+		pokemon_moves.first(4).each.with_index do |move, index|
 			move_id = move[1]
 			unless move_id.blank?
 				move_from_db = Move.find(move_id)
@@ -87,7 +88,7 @@ class PokemonsController < ApplicationController
 			flash[:danger] = "Pokemon is not allowed to have multiple same moves."
 		end
 
-		redirect_to new_pokemon_path
+		redirect_to pokemon_path(pokemon)
 	end
 
 	def show
@@ -100,7 +101,7 @@ class PokemonsController < ApplicationController
 	def update
 		pokemon = Pokemon.find_by(id: params[:id])
 
-		pokemon.name = params[:pokemon][:name]
+		pokemon.name = params[:pokemon][:name].capitalize
 		pokemon.image_url = params[:pokemon][:image_url]
 		pokemon.type_1_id = params[:pokemon][:type_1_id]
 		pokemon.type_2_id = params[:pokemon][:type_2_id]
@@ -112,10 +113,7 @@ class PokemonsController < ApplicationController
 		pokemon.special_attack = params[:pokemon][:special_attack]
 		pokemon.special_defense = params[:pokemon][:special_defense]
 
-		pokemon_moves = pokemon.pokemon_moves
-		pokemon_moves.each do |move|
-			move.destroy
-		end
+		pokemon_moves = pokemon.pokemon_moves.destroy_all
 
 		pokemon_moves = params[:pokemon][:moves]
 		pokemon_moves.each.with_index do |move, index|
@@ -139,7 +137,7 @@ class PokemonsController < ApplicationController
 			flash[:danger] = "Pokemon is not allowed to have multiple same moves."
 		end
 
-		redirect_to pokemon_path(pokemon)
+		redirect_back(fallback_location: pokemon_path(pokemon))
 	end
 
 	def learn_moves
@@ -147,39 +145,115 @@ class PokemonsController < ApplicationController
 		waiting_moves = params[:waiting].each.filter {|k,v| v.to_i == 1}
 		learned_moves = params[:learned].each.filter {|k,v| v.to_i == 1}
 
-		learned_moves.each.with_index do |move, index|
-			if !waiting_moves[index].blank? && index < 4
-				waiting_move = pokemon.default_moves.joins(:move).find_by(move: waiting_moves[index][0]) 
+		# NEED TO REFACTOR 
+		waiting_moves.first(4).each.with_index do |waiting_move, index|
+			default_move = pokemon.default_moves.joins(:move).find_by(move: waiting_move[0])
+			# If move is not for the Pokemon
+			if default_move.blank?
+				flash[:danger] = "Move not Found"
+				return redirect_back(fallback_location: root_url)
+			end
 
-				if !waiting_move.blank?
-					learned_move = pokemon.pokemon_moves.find_by(move: move[0])
+			pokemon_move_all = pokemon.pokemon_moves
+			learned = pokemon_move_all.find_by(move: waiting_move[0])
+			# If move is not learned yet
+			if learned.blank?
+				move_to_replace = learned_moves[index]
 
-					learned_move.update(move_id: waiting_move.move.id, current_pp: waiting_move.move.maximum_pp)
-					waiting_move.update(status: 'Accepted')
+				# If there's move to replace
+				if !move_to_replace.blank?
+					move_to_replace = pokemon.pokemon_moves.find_by(move: learned_moves[index][0])
+					move_to_replace.update(move_id: default_move.move_id, current_pp: default_move.move.maximum_pp)
+
+					# Update Waiting move Status
+					default_move.update(status: 'Accepted')
+					flash[:success] = "#{pokemon.name} has learned new moves!"
+
+				# If there's no move to replace and pokemon don't have 4 moves yet
+				elsif pokemon_move_all.length < 4
+					pokemon_move = pokemon.pokemon_moves.build
+					pokemon_move.move_id = default_move.move_id
+					pokemon_move.current_pp = default_move.move.maximum_pp
+					pokemon_move.row_order = pokemon.pokemon_moves.maximum(:row_order)+1
+
+					unless pokemon.save
+						flash[:danger] = pokemon.errors.full_messages[0]
+					end
+
+					# Update Waiting move Status
+					default_move.update(status: 'Accepted')
+					flash[:success] = "#{pokemon.name} has learned new moves!"
+				else
+					flash[:danger] = "#{pokemon.name} already know 4 moves!"
 				end
+
+
+			else
+				flash[:danger] = "Move already learned"
 			end
+
 		end
 
-		waiting_moves.each do |move|
-			waiting_move = pokemon.default_moves.find_by(move: move[0])
-			if waiting_move.Waiting?
-				waiting_move.update(status: 'Rejected')
-			end
-		end
+		moves = PokemonLearnMove.new
+		moves.reject_waiting(pokemon)
 
-		redirect_to root_url
+		redirect_back(fallback_location: root_url)
 	end
 
+	# Render Evolution
+	def evolution
+		@pokemon = Pokemon.find_by(id: params[:id])
+		@evolve = false
+
+		evolution = PokemonEvolution.new
+		if evolution.evolve?(@pokemon)
+			@next_pokemon = evolution.next_pokemon(@pokemon)
+			@evolve = true
+		end
+	end
+
+	# START EVOLVE
+	def evolve
+		confirm = params[:commit].downcase == 'yes'
+
+		# Get Current > Root > Latest
+		pokemon = Pokemon.find_by(id: params[:id])
+		evolution = PokemonEvolution.new
+
+		if confirm
+			next_pokemon = evolution.next_pokemon(pokemon)
+			prev_pokemon_name = pokemon.name
+			evolution_status = evolution.evolve(pokemon)
+			if evolution_status
+				flash[:success] = "Congatulations! #{prev_pokemon_name} has evolved into #{next_pokemon.name}!"
+			else
+				flash[:danger] = evolution_status 
+			end
+		else
+			flash[:warning] = "#{pokemon.name} rejected the evolution!"
+			evolution.reject_evolution(pokemon)
+		end
+
+		redirect_to pokemon_path(pokemon)
+	end
+	# END EVOLVE
+
 	def destroy
-		pokemons = Pokemon.all
-		pokemons.destroy_all
+		pokemon = Pokemon.find_by(id: params[:id])
+		unless pokemon.destroy
+			flash[:danger] = pokemon.errors.full_messages
+		end
+
+		flash[:warning] = "#{pokemon.name} is Deleted!"
+
+		redirect_to pokemons_path
 	end
 
 	private
 
 	def is_pokemon_exist?
 		pokemon = Pokemon.find_by(id: params[:id])
-		if pokemon.blank?
+		if pokemon.blank? && !params[:id].blank?
 			flash[:danger] = "Pokemon Not Found"
 			redirect_to root_url
 		end

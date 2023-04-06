@@ -1,10 +1,15 @@
-<%= form_with(url: pokemon_path(@pokemon), scope: :pokemon, local: true) do |form| %>
 <div class="container vh-100">
+    <%= form_with(url: pokemon_path(@pokemon), scope: :pokemon, method: :PATCH, local: true) do |form| %>
     <header class="masthead d-flex flex-row align-items-center justify-content-between py-3">
-        <h1 class="my-auto font-weight-bold"><%= @pokemon.name %></h1>
-        <%= form.submit 'SAVE', class: "btn btn-primary px-4 py-2 font-weight-bold" %>
+        <div class="">
+            <h1 class="my-auto font-weight-bold"><%= @pokemon.name %></h1>
+        </div>
+        <div class="">
+            <%= link_to 'HEAL', pokedex_heal_path(@pokemon), class: "btn btn-success px-4 py-2 font-weight-bold mx-2" %>
+            <%= form.submit 'SAVE', class: "btn btn-primary px-4 py-2 font-weight-bold" %>
+        </div>
     </header>
-    <div class="d-flex flex-column align-items-center justify-content-center flex-wrap bg-light">
+    <div class="d-flex flex-column align-items-center justify-content-center flex-wrap">
         <div class="progress border border-1 border-success overflow-x-auto w-100">
             <p class="mx-2 font-weight-bold text-success">HP</p>
             <div class="progress-bar bg-success" role="progressbar" style="width: <%= (100*@pokemon.current_hp/@pokemon.maximum_hp ) %>%"></div>
@@ -19,7 +24,7 @@
         <%= image_tag @pokemon.image_url, id: 'pokemon_1_sprite', class: 'w-25 h-50', alt: asset_path('pokeball.png') %>
         <h5><%= @pokemon.backstory %></h5>
     </div>
-    <div class="d-flex flex-row align-items-baseline justify-content-center flex-wrap bg-light">
+    <div class="d-flex flex-row align-items-baseline justify-content-center flex-wrap">
         <div class="flex-grow-1 text-left font-weight-bold border-right border-3 px-3 py-5">
             <div class="border-2">
                 <%= form.label :image_url, class: "mx-1" %>
@@ -75,5 +80,12 @@
             </div>
         </div>
     </div>
+    <% end %>
+    <div class="d-flex flex-column align-items-center justify-content-center flex-wrap py-5">
+        <%= button_to "Delete #{@pokemon.name}", 
+            pokemon_path(@pokemon), 
+            method: :delete, 
+            class: "btn btn-outline-danger mx-2 font-weight-bold", 
+            onclick: "return confirm('Are you sure?')" %>
+    </div>
 </div>
-<% end %>

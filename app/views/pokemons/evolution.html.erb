@@ -1,0 +1,34 @@
+<div class="py-5 h-100" style="background: url('<%= asset_path("bg") %>');">
+    <% if @evolve %>
+    <header class="masthead d-flex flex-column align-items-center justify-content-center px-5 w-100 text-dark">
+        <h1 class="font-weight-bold">
+            <%= @pokemon.name %> is Evolving!
+        </h1>
+    </header>
+    <hr class="border border-3 border-dark w-75 mx-auto">
+    <div class="d-flex flex-row flex-wrap justify-content-center align-content-center text-dark font-weight-bold px-5 py-3">
+        <div class="d-flex flex-grow-1 justify-content-center justify-content-lg-end align-content-center">
+            <%= image_tag @pokemon.image_url, class: "w-50 grayscale  py-5 px-5" %>
+        </div>
+        <div class="d-flex flex-grow-1 justify-content-center justify-content-lg-start align-content-center">
+            <%= image_tag @next_pokemon.image_url, class: "w-50" %>
+        </div>
+    </div>
+    <div class="d-flex flex-row flex-wrap justify-content-center align-content-center text-dark font-weight-bold px-5 py-3">
+        <h1 class="font-weight-bold text-center">Evolve <%= @pokemon.name %></span> into <span class="text-warning"><%= @next_pokemon.name %></span>?</h1>
+    </div>
+    <div class="d-flex flex-row flex-wrap justify-content-center align-content-end text-dark font-weight-bold">
+    <%= form_with(url: pokedex_evolve_path(@pokemon), scope: :pokemon, local: true) do |form| %>
+        <%= form.submit :No, class: "btn btn-outline-danger text-dark font-weight-bold px-5 py-2 mx-1" %>
+        <%= form.submit :Yes, class: "btn btn-outline-info text-dark font-weight-bold px-5 py-2 mx-1" %>
+    <% end %>
+    </div>
+    <% else %>
+    <div class="d-flex flex-column align-items-center justify-content-center px-5 h-100 w-100 text-dark">
+        <h1 class="font-weight-bold">
+            <span class="text-danger"><%= @pokemon.name %></span> is not evolving anytime soon!
+        </h1>
+        <%= link_to 'Go Home', root_url, class: "btn btn-outline-danger text-dark font-weight-bold px-5 py-2 mx-1" %>
+    </div>
+    <% end %>
+</div>

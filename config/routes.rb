@@ -6,11 +6,10 @@ Rails.application.routes.draw do
   post 'battle/start', to: 'battles#create'  
   post 'battle/:id', to: 'battles#update'
 
-  get '/pokedex', to: 'pokemons#pokedex', as: :pokedex
-  get 'pokemons/heal(/:id)', to: 'pokemons#heal', as: :pokemons_heal
-  post 'pokemons/new', to: 'pokemons#create'  
-  post 'pokedex/:id', to: 'pokemons#update'
-  post 'pokemons/:id/learn', to: 'pokemons#learn_moves', as: :learn_move
+  get 'pokedex/heal(/:id)', to: 'pokemons#heal', as: :pokedex_heal
+  get 'pokedex/:id/evolution', to: 'pokemons#evolution', as: :pokedex_evolution
+  post 'pokedex/:id/learn', to: 'pokemons#learn_moves', as: :learn_move
+  post 'pokedex/:id/evolution', to: 'pokemons#evolve', as: :pokedex_evolve
 
   resources :pokemons, path: :pokedex
   resources :battles, path: :battle

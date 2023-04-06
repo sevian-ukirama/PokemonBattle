@@ -1,5 +1,6 @@
 class BattlesController < ApplicationController
 	require 'Pokemon/TypeCalculation'
+	require 'Pokemon/Evolution'
 
 	before_action :check_battle_status,:check_battle_winner,:is_battle_exist?, only: [:show]
 
@@ -9,26 +10,8 @@ class BattlesController < ApplicationController
 
 	def new
 		@pokemons = Pokemon.order(name: :asc).all
-
-		# pokemon_moves = PokemonMove.joins(:pokemon).joins(:move).order(pokemon_id: :asc).all
-
-		@pokemon_moves = {}
-
-		@pokemons.each do |pokemon|
-			pokemon_moves = pokemon.pokemon_moves
-			if !pokemon_moves.blank?
-				@pokemon_moves[pokemon.name] = {}
-				pokemon_moves.each do |move|
-					 @pokemon_moves[pokemon.name].merge({
-						"Name" => {
-							'current_pp': move.current_pp,
-							'maximum_pp': move.move.maximum_pp
-						} 
-					})
-				end
-			end
-		end
-		puts 'MOVES: ', @pokemon_moves['Bayleef'][:pokemon_moves]
+		@pokemon_moves = PokemonMove.all
+		@moves = Move.all
 	end
 
 	def create
@@ -116,6 +99,7 @@ class BattlesController < ApplicationController
 	end
 
 
+	# Need to refactor this to lib/
 	# START HIT CALC
 	def perform_hit(performer_pokemon, target_pokemon, submitted_move_id, submitted_move_row_order)
 		performer_move = performer_pokemon.pokemon_moves.find_by(move_id: submitted_move_id, row_order: submitted_move_row_order)
@@ -218,25 +202,33 @@ class BattlesController < ApplicationController
 
 	def end
 		@battle = Battle.find(params[:id])
-		if @battle.status_id == 'finished'
-			@winner_pokemon = @battle.winner_pokemon
-			@learned_moves = @winner_pokemon.pokemon_moves
 
-			# Leveling Up Flag
-			@level_up = @winner_pokemon.is_leveling_up
-			current_exp = @winner_pokemon.current_experience
-			next_level_exp = @winner_pokemon.next_level_experience
-			prev_level_exp = previous_level_exp(@winner_pokemon)
-			@current_exp_percentage = 100*(current_exp-prev_level_exp)/(next_level_exp-prev_level_exp)
-			if @level_up
-				@waiting_moves = @winner_pokemon
-									.default_moves
-									.where(status: :Waiting, at_level: ...@winner_pokemon.level)
-									.joins(:move)
-			end
-		else
-			redirect_to battle_path(@battle)
+		if @battle.status_id != 'finished'
+			return redirect_to battle_path(@battle)
 		end
+
+		@winner_pokemon = @battle.winner_pokemon
+		@learned_moves = @winner_pokemon.pokemon_moves
+
+		# Leveling Up Flag
+		@level_up = @winner_pokemon.is_leveling_up
+		current_exp = @winner_pokemon.current_experience
+		next_level_exp = @winner_pokemon.next_level_experience
+		prev_level_exp = previous_level_exp(@winner_pokemon)
+		@current_exp_percentage = 100*(current_exp-prev_level_exp)/(next_level_exp-prev_level_exp)
+
+		if @level_up
+			@waiting_moves = @winner_pokemon
+								.default_moves
+								.where(status: :Waiting, at_level: ..@winner_pokemon.level)
+								.joins(:move)
+
+			evolution = PokemonEvolution.new
+			if evolution.evolve?(@winner_pokemon) && @waiting_moves.blank?
+				return redirect_to pokedex_evolution_path(@winner_pokemon)
+			end
+		end
+
 	end
 
 	def finish_battle
@@ -276,6 +268,7 @@ class BattlesController < ApplicationController
 	end
 
 
+	# Need to refactor this to lib/
 	# START LEVELING
 
 	def gain_exp(winner_pokemon, loser_pokemon)
@@ -291,11 +284,10 @@ class BattlesController < ApplicationController
 
 		winner_pokemon.current_experience = winner_pokemon.current_experience+gained_exp
 		winner_pokemon.is_leveling_up = false
-		# Check is leveling Up and for View
+
 		while leveling_up?(winner_pokemon)
 			level_up(winner_pokemon)
 			winner_pokemon.is_leveling_up = true
-			puts "LEVELED UP!"
 		end
 
 		unless winner_pokemon.save

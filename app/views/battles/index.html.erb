@@ -51,6 +51,9 @@
                         <%= link_to 'Finish', 
                                 battle_finish_path(battle), 
                                 class: "btn btn-warning mx-2 font-weight-bold" if battle.status_id == 'ongoing' %>
+                        <%= link_to 'See End', 
+                                battle_path(battle), 
+                                class: "btn btn-primary mx-2 font-weight-bold" if battle.status_id == 'finished' %>
                         <%= button_to 'Delete', 
                                 battle_path(battle), 
                                 method: :delete, 

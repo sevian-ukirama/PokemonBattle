@@ -46,6 +46,7 @@
 </div>
 <script type="text/javascript">
     var pokemons = JSON.parse('<%= @pokemons.to_json.html_safe %>');
+    var pokemon_moves = JSON.parse('<%= @pokemon_moves.to_json.html_safe %>');
     var moves = JSON.parse('<%= @moves.to_json.html_safe %>');
 </script>
 <%= javascript_include_tag "battle_new" %>

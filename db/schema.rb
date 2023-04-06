@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2023_04_04_024852) do
+ActiveRecord::Schema.define(version: 2023_04_06_013304) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -100,7 +100,7 @@ ActiveRecord::Schema.define(version: 2023_04_04_024852) do
     t.integer "current_experience", default: 1
     t.integer "next_level_experience"
     t.boolean "is_leveling_up", default: false
-    t.index ["name"], name: "index_pokemons_on_name", unique: true
+    t.index ["id", "name"], name: "index_pokemons_on_id_and_name", unique: true
   end
 
   add_foreign_key "battles", "pokemons", column: "loser_pokemon_id"
