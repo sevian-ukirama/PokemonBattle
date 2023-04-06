@@ -20,7 +20,7 @@ function clear_heal_path (pokemon_number) {
 }
 
 function set_heal_path (pokemon, pokemon_number) {
-	let heal_path = pokemon ? `/pokemons/heal/${pokemon.id}` : '#'
+	let heal_path = pokemon ? `/pokedex/heal/${pokemon.id}` : '#'
 	let pokemon_heal_dom = DOC.querySelector(`#pokemon_${pokemon_number}_heal`)
 
 	if (pokemon) {

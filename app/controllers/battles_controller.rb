@@ -114,9 +114,7 @@ class BattlesController < ApplicationController
 		# If Type is resistant, doesn't affect
 		type_chart = PokemonTypeChart.new
 		target_pokemon_resistant = type_chart.status_resistant?(move.status_effect_id, target_pokemon.type_1_id) 
-
-
-		status_effect_hit = rand(100) < 45
+		status_effect_hit = rand(4) <= 2
 
 		if target_pokemon.status_id != move.status_effect_id && !target_pokemon_resistant && status_effect_hit
 			add_status_effect_to_pokemon(target_pokemon, move.status_effect_id)

@@ -116,10 +116,10 @@ class PokemonTypeChart
 
 	def status_resistant?(move_status_effect, target_type_1)
 		resistance = false
-		if (target_type_1 == 'Fire' && move_status_effect = 'Burn') ||
-			(target_type_1 == 'Ice' && move_status_effect = 'Frozen') ||
-			(target_type_1 == 'Poison' && move_status_effect = 'Poison') ||
-			(target_type_1 == 'Electric' && move_status_effect = 'Paralysis')
+		if (target_type_1 == 'Fire' && move_status_effect == 'Burn') ||
+			(target_type_1 == 'Ice' && move_status_effect == 'Frozen') ||
+			(target_type_1 == 'Poison' && move_status_effect == 'Poison') ||
+			(target_type_1 == 'Electric' && move_status_effect == 'Paralysis')
 			
 			resistance = true
 		end
