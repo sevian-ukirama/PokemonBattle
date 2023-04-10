@@ -1,5 +1,5 @@
 class BattlesController < ApplicationController
-	require 'Pokemon/TypeCalculation'
+	require 'Battle/Hit'
 	require 'Pokemon/Evolution'
 
 	before_action :check_battle_status,:check_battle_winner,:is_battle_exist?, only: [:show]
@@ -65,23 +65,15 @@ class BattlesController < ApplicationController
 		move = performer_pokemon.moves.find_by(id: submitted_move_id)
 
 		# Prevent Pokemon hijacking other's move
-		if submitted_move_pokemon_id.to_i != performer_pokemon.id.to_i
+		if performer_pokemons_move?(submitted_move_pokemon_id, performer_pokemon)
 			flash[:danger] = "Not #{target_pokemon.name}'s turn!"
 			return redirect_to battle_path(params[:id])
 		end
 
-		# If random > accuracy, not hit
-		# i.e If accuracy = 70, means move has 70% of hitting enemy
-		hit = rand(100) < move.accuracy if !move.blank?
-
-		if hit
-			perform_hit(performer_pokemon, target_pokemon, submitted_move_id, submitted_move_row_order)
-		else
-			flash[:warning] = "#{performer_pokemon.name} attack Missed!"
-		end
+		perform_hit(performer_pokemon, target_pokemon, submitted_move_id, submitted_move_row_order)
 
 		next_turn_counter = 1 
-		if target_pokemon.status_id == 'Sleep' || target_pokemon.status_id == 'Frozen'
+		if pokemon_immobilized?(target_pokemon)
 			next_turn_counter += 1 
 			flash[:secondary] = "#{target_pokemon.name} is now affected with #{target_pokemon.status_id}. Turn has been Skipped!"
 		end
@@ -98,30 +90,48 @@ class BattlesController < ApplicationController
 		battle.turn_number = battle.turn_number+next_turn_counter
 	end
 
+	def performer_pokemons_move?(move_pokemon_id, pokemon)
+		move_pokemon_id.to_i != pokemon.id.to_i
+	end
 
-	# Need to refactor this to lib/
-	# START HIT CALC
+	def pokemon_immobilized?(pokemon)
+		pokemon.status_id == 'Sleep' || pokemon.status_id == 'Frozen'
+	end
+
+	# Hit
 	def perform_hit(performer_pokemon, target_pokemon, submitted_move_id, submitted_move_row_order)
+		battle_hit = BattleHit.new
 		performer_move = performer_pokemon.pokemon_moves.find_by(move_id: submitted_move_id, row_order: submitted_move_row_order)
 		move = performer_pokemon.moves.find_by(id: submitted_move_id)
-		# Damage calculation
-		damage = damage_calc(performer_pokemon, target_pokemon, move)
 
-		reduce_pp(performer_move, move.usage_pp)
-		reduce_hp(target_pokemon, damage)
+		# If random > accuracy, not hit
+		# i.e If accuracy = 70, means move has 70% of hitting enemy
+		hit = rand(10) < move.accuracy.to_i/10 if !move.blank?
 
-		# If User is spamming same move status, status doesn't stack
-		# If Type is resistant, doesn't affect
-		type_chart = PokemonTypeChart.new
-		target_pokemon_resistant = type_chart.status_resistant?(move.status_effect_id, target_pokemon.type_1_id) 
-		status_effect_hit = rand(4) <= 2
+		if hit
+			critical = battle_hit.critical_hit?
+			damage = battle_hit.damage_calc(performer_pokemon, target_pokemon, move, critical)
+			battle_hit.reduce_hp(target_pokemon, damage)
 
-		if target_pokemon.status_id != move.status_effect_id && !target_pokemon_resistant && status_effect_hit
-			add_status_effect_to_pokemon(target_pokemon, move.status_effect_id)
-			check_pokemon_status(target_pokemon)
+			if critical
+				flash[:primary] = "Critical Hit!"
+			end
 		else
+			flash[:warning] = "#{performer_pokemon.name} attack Missed!"
+		end
+
+		battle_hit.reduce_pp(performer_move, move.usage_pp)
+
+		if battle_hit.status_effect_hit?(move, target_pokemon)
+			battle_hit.apply_status_effect(target_pokemon, move.status_effect_id)
+			if battle_hit.status_effect_hurt?(move)
+				status_dmg = rand(1..10)
+				battle_hit.apply_status_damage(target_pokemon, status_dmg)
+			end
+			flash[:secondary] = "#{target_pokemon.name} is now affected with #{target_pokemon.status_id} and damaged for #{status_dmg} dmg!"
+		else
+			battle_hit.remove_pokemon_status_effect(target_pokemon)
 			flash[:warning] = "Oh no, #{target_pokemon.name} resisted #{move.status_effect_id }"
-			remove_pokemon_status_effect(target_pokemon)
 		end
 
 		# Saves Perfomer & Target & Move Updation
@@ -132,71 +142,7 @@ class BattlesController < ApplicationController
 		end
 	end
 
-	def damage_calc(performer_pokemon, target_pokemon, move)
-		level = performer_pokemon.level
-		critical = rand(100) < 22 ? 2 : 1
-
-		# If critical, flash message
-		if critical == 2
-			flash[:primary] = "Critical Hit!"
-		end
-
-		# First part of dmg Calc
-		first_part_dmg = ((2*level*critical)/5)+2
-
-		power = move.power.to_i
-		
-		# As per Bulbapedia, is Attack or Defense stat > 255, then stat / 4
-		attack = performer_pokemon.attack > 255 ? performer_pokemon.attack.to_i/4 : performer_pokemon.attack
-		defense = target_pokemon.defense > 255 ? target_pokemon.defense.to_i/4 : target_pokemon.defense
-
-		# Uses lib/Pokemon/PokemonTypeChart
-		type_chart = PokemonTypeChart.new
-		type_1_effectiveness = type_chart.effectiveness(move.type_id, target_pokemon.type_1_id)
-		type_2_effectiveness = target_pokemon.type_2_id.blank? ?
-								1 : 
-								type_chart.effectiveness(move.type_id, target_pokemon.type_2_id)
-
-		same_type_bonus = (performer_pokemon.type_1_id == move.type_id) || (performer_pokemon.type_2_id == move.type_id) ?
-						 1.5 :
-						 1
-
-		# Second part of dmg Calc
-		second_part_dmg = ((first_part_dmg*power*attack/defense)/50)+2
-		random = rand(0.85..1)
-
-		total_dmg = second_part_dmg*same_type_bonus*type_1_effectiveness*type_2_effectiveness*random
-		total_dmg.to_i
-	end
-
-	def reduce_pp(performer_move, usage_pp)
-		unless performer_move.current_pp.zero?
-			performer_move.current_pp = performer_move.current_pp.to_i - usage_pp.to_i
-		end
-	end
-
-	def reduce_hp(target_pokemon, damage)
-		target_pokemon.current_hp = target_pokemon.current_hp - damage
-		target_pokemon.current_hp = target_pokemon.current_hp.positive? ? target_pokemon.current_hp : 0
-	end
-
-	def check_pokemon_status(pokemon)
-		if pokemon.status_id != 'Normal' && pokemon.status_id != 'Sleep'
-			random_status_dmg = rand(1..10)
-			reduce_hp(pokemon, random_status_dmg)
-			flash[:secondary] = "#{pokemon.name} is now affected with #{pokemon.status_id} and damaged for #{random_status_dmg} dmg!"
-		end
-	end
-
-	def add_status_effect_to_pokemon(target_pokemon, status_effect)
-		target_pokemon.status_id = status_effect
-	end
-
-	def remove_pokemon_status_effect(pokemon)
-		pokemon.status_id = 'Normal'
-	end	
-	# END HIT CALC 
-
+	# 
 
 	def end
 		@battle = Battle.find(params[:id])
