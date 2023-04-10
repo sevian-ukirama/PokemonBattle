@@ -40,10 +40,14 @@
             </div>
             <div class="site-heading my-2">
                 <% @waiting_moves.each do |waiting_move| %>
-                    <%= form.check_box waiting_move.move.id, class: "hidden", hidden:true, name: "waiting[#{waiting_move.move.id}]" %>
-                    <%= form.label waiting_move.move.id, waiting_move.move.name, 
-                        class: "btn btn-outline-warning text-dark font-weight-bold px-5 py-2 waiting-moves", 
-                        onclick:"this.classList.toggle('btn-warning');" %>
+                    <%= form.check_box "waiting_#{waiting_move.move.id}", 
+                            class: "hidden", 
+                            hidden:true, 
+                            name: "waiting[#{waiting_move.move.id}]" %>
+                    <%= form.label "waiting_#{waiting_move.move.id}", 
+                            waiting_move.move.name, 
+                            class: "btn btn-outline-warning text-dark font-weight-bold px-5 py-2 waiting-moves", 
+                            onclick:"this.classList.toggle('btn-warning');" %>
                 <% end %>
             </div>
 
@@ -53,10 +57,13 @@
             </div>
             <div class="site-heading my-2">
                 <% @learned_moves.each do |learned_move| %>
-                    <%= form.check_box learned_move.move.id, class: "hidden", hidden:true, name: "learned[#{learned_move.move.id}]" %>
-                    <%= form.label learned_move.move.id, learned_move.move.name, 
-                        class: "btn btn-outline-info text-dark font-weight-bold px-5 py-2 learned-moves", 
-                        onclick:"this.classList.toggle('btn-info');" %>
+                    <%= form.check_box "learned_#{learned_move.move.id}", 
+                            class: "hidden", 
+                            hidden:true, name: "learned[#{learned_move.move.id}]" %>
+                    <%= form.label "learned_#{learned_move.move.id}", 
+                            learned_move.move.name, 
+                            class: "btn btn-outline-info text-dark font-weight-bold px-5 py-2 learned-moves", 
+                            onclick:"this.classList.toggle('btn-info');" %>
                 <% end %>
             </div>
 

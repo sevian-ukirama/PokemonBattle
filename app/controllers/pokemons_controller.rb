@@ -141,19 +141,21 @@ class PokemonsController < ApplicationController
 	end
 
 	def learn_moves
-		moves = PokemonLearnMove.new
+		pokemon_learn_move = PokemonLearnMove.new
 		pokemon = Pokemon.find_by(id: params[:id])
 		waiting_moves = params[:waiting].each.filter {|k,v| v.to_i == 1}
 		learned_moves = params[:learned].each.filter {|k,v| v.to_i == 1}
 
+		new_moves = []
+
 		# If Skips, rejects all
 		if waiting_moves.blank?
-			moves.reject_waiting(pokemon)
+			pokemon_learn_move.reject_waiting(pokemon)
 		end
 
-		# NEED TO REFACTOR 
 		waiting_moves.first(4).each.with_index do |waiting_move, index|
 			default_move = pokemon.default_moves.joins(:move).find_by(move: waiting_move[0])
+
 			# If move is not for the Pokemon
 			if default_move.blank?
 				flash[:danger] = "Move not Found"
@@ -162,49 +164,47 @@ class PokemonsController < ApplicationController
 
 			pokemon_move_all = pokemon.pokemon_moves
 			learned = pokemon_move_all.find_by(move: waiting_move[0])
-			# If move is not learned yet
-			if learned.blank?
-				move_to_replace = learned_moves[index]
 
-				# If there's move to replace
-				if !move_to_replace.blank?
-					move_to_replace = pokemon.pokemon_moves.find_by(move: learned_moves[index][0])
-					move_to_replace.update(move_id: default_move.move_id, current_pp: default_move.move.maximum_pp)
-
-					# Update Waiting move Status
-					default_move.update(status: 'Accepted')
-					flash[:success] = "#{pokemon.name} has learned new moves!"
-
-					moves.reject_waiting(pokemon)
-
-				# If there's no move to replace and pokemon don't have 4 moves yet
-				elsif pokemon_move_all.length < 4
-					pokemon_move = pokemon.pokemon_moves.build
-					pokemon_move.move_id = default_move.move_id
-					pokemon_move.current_pp = default_move.move.maximum_pp
-					pokemon_move.row_order = pokemon.pokemon_moves.maximum(:row_order)+1
-
-					unless pokemon.save
-						flash[:danger] = pokemon.errors.full_messages[0]
-					end
-
-					# Update Waiting move Status
-					default_move.update(status: 'Accepted')
-					flash[:success] = "#{pokemon.name} has learned new moves!"
-
-					moves.reject_waiting(pokemon)
-
-				else
-					flash[:danger] = "#{pokemon.name} already know 4 moves!"
-				end
-
-
-			else
-				flash[:danger] = "Move already learned"
+			# If move already learned
+			if !learned.blank?
+				flash[:danger] = "#{learned.move.name} already learned"
+				return redirect_back(fallback_location: root_url)
 			end
 
+			# If move is not learned yet
+			move_to_replace = learned_moves[index]
+
+			# If moves > 4 and no move to replace
+			if move_to_replace.blank? && pokemon_move_all.length >= 4
+				flash[:danger] = "#{pokemon.name} already know 4 moves!"
+				return redirect_back(fallback_location: root_url)
+			end
+
+			# If there's move to replace
+			if !move_to_replace.blank?
+				move_to_replace = pokemon.pokemon_moves.find_by(move: learned_moves[index][0])
+				move_to_replace.update(move_id: default_move.move_id, current_pp: default_move.move.maximum_pp)
+
+			# If there's no move to replace and pokemon don't have 4 moves yet
+			elsif pokemon_move_all.length < 4
+				pokemon_move = pokemon.pokemon_moves.build
+				pokemon_move.move_id = default_move.move_id
+				pokemon_move.current_pp = default_move.move.maximum_pp
+				pokemon_move.row_order = pokemon.pokemon_moves.maximum(:row_order)+1
+
+				unless pokemon.save
+					flash[:danger] = pokemon.errors.full_messages[0]
+				end
+			end
+
+			# Update Waiting move Status
+			default_move.update(status: 'Accepted')
+			new_moves.push(default_move.move.name)
 		end
 
+		pokemon_learn_move.reject_waiting(pokemon)
+
+		flash[:success] = "#{pokemon.name} has learned new #{'move'.pluralize(new_moves.length)}! #{new_moves.join(', ')} is now available to perform!"
 		redirect_back(fallback_location: root_url)
 	end
 
