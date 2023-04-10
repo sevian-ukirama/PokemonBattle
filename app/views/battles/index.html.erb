@@ -14,20 +14,28 @@
             </div>
         </div>
     </header>
-    <div class="d-flex flex-wrap bg-light pb-5">
-        <div class="container">
-            <div class="text-center">
-                <h1 class="my-2"><%= 'Battle'.pluralize(@battles.length) %> List</h1>
-            </div>
-            <div class="d-flex flex-column border border-3 px-3 py-3 font-weight-bold text-dark flex-wrap">
-            <% if @battles.blank? %>
-                <p class="my-2">No Battle so far...</p>
-            <% else %>
-                <% @battles.each do |battle| %>
-                <div class="d-flex flex-row justify-content-between align-items-baseline my-1">
-                    <div class="flex-grow-1">
-                        <p class="m-0">
-                            <%= "Battle ID: #{battle.id} " %> (
+    <div class="d-flex flex-column flex-wrap bg-dark py-5">
+        <div class="d-flex flex-column py-3 text-center flex-wrap">
+            <h1 class="my-2 text-light position-sticky font-weight-bold"><%= 'Battle'.pluralize(@battles.length) %> List</h1>
+        <% if @battles.blank? %>
+            <p class="my-2">No Battle so far...</p>
+        <% else %>
+            <table class="table table-striped table-dark">
+                <thead class="sticky-top">
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Battle ID</th>
+                        <th scope="col" class="text-start">Players</th>
+                        <th scope="col" class="text-start">Status</th>
+                        <th scope="col" class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody class="h-100">
+                <% @battles.each.with_index(@battles.offset + 1) do |battle, index| %>
+                    <tr>
+                        <th scope="row"><%= index %></th>
+                        <td><%= battle.id %></td>
+                        <td class="text-start">
                             <span 
                                 class="<%= 'text-success' if battle.winner_pokemon_id == battle.pokemon_1.id  %>">
                                 <%= battle.pokemon_1.name %>
@@ -36,33 +44,32 @@
                             <span class="<%= 'text-success' if battle.winner_pokemon_id == battle.pokemon_2.id  %>">
                                 <%= battle.pokemon_2.name %>
                             </span>
-                            )
-                        </p>
-                    </div>
-                    <div class="flex-grow-1 flex flex-row">
-                        <p class="m-0">
-                            <%= "Status: #{battle.status_id.capitalize}" %>
-                        </p>
-                    </div>
-                    <div class="flex-grow-1 justify-content-end d-flex">
-                        <%= link_to 'Resume', 
+                        </td>
+                        <td class="text-start"><%= battle.status_id.capitalize %></td>
+                        <td class="d-flex flex-column flex-lg-row justify-content-center">
+                            <%= link_to 'Resume', 
                                 battle_path(battle), 
-                                class: "btn btn-primary mx-2 font-weight-bold" if battle.status_id == 'ongoing' %>
-                        <%= link_to 'Finish', 
-                                battle_finish_path(battle), 
-                                class: "btn btn-warning mx-2 font-weight-bold" if battle.status_id == 'ongoing' %>
-                        <%= link_to 'See End', 
-                                battle_path(battle), 
-                                class: "btn btn-primary mx-2 font-weight-bold" if battle.status_id == 'finished' %>
-                        <%= button_to 'Delete', 
-                                battle_path(battle), 
-                                method: :delete, 
-                                class: "btn btn-danger mx-2 font-weight-bold", 
-                                onclick: "return confirm('Are you sure?')" %>
-                    </div>
-                </div>
+                                class: "btn btn-primary mx-2 font-weight-bold my-lg-0 my-1" if battle.status_id == 'ongoing' %>
+                            <%= link_to 'Finish', 
+                                    battle_finish_path(battle), 
+                                    class: "btn btn-warning mx-2 font-weight-bold my-lg-0 my-1" if battle.status_id == 'ongoing' %>
+                            <%= link_to 'See End', 
+                                    battle_path(battle), 
+                                    class: "btn btn-primary mx-2 font-weight-bold my-lg-0 my-1" if battle.status_id == 'finished' %>
+                            <%= button_to 'Delete', 
+                                    battle_path(battle), 
+                                    method: :delete, 
+                                    class: "btn btn-danger mx-2 font-weight-bold my-lg-0 my-1", 
+                                    onclick: "return confirm('Are you sure?')" %>   
+                        </td>
+                    </tr>
                 <% end %>
-            <% end %>
+                </tbody>
+            </table>
+
+        <% end %>
+            <div class="d-flex justify-content-end w-100">
+                <%= will_paginate @battles, class: 'pagination bg-light px-3 py-2' %>
             </div>
         </div>
     </div>

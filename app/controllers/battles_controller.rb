@@ -5,7 +5,7 @@ class BattlesController < ApplicationController
 	before_action :check_battle_status,:check_battle_winner,:is_battle_exist?, only: [:show]
 
 	def index
-		@battles = Battle.order(created_at: :asc)
+		@battles = Battle.paginate(page: params[:page], per_page: 15).order(created_at: :asc)
 	end
 
 	def new

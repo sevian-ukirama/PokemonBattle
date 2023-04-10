@@ -25,4 +25,16 @@
 .flex-basis-100 { flex-basis:100% }
 .bg-ice { background: rgba(0, 0, 0, .6); }
 .grayscale { filter: grayscale(100%); }
+
+.pagination a {
+    margin: 0 5px;
+    color: black;
+    font-weight: bold;
+    text-decoration: none;
+}
+.pagination .current {
+    margin: 0 5px;
+    color: #0d6efd;
+    font-weight: bold;
+}
 /*.masthead { background: #192a56; }*/
