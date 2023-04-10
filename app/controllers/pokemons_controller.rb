@@ -141,9 +141,15 @@ class PokemonsController < ApplicationController
 	end
 
 	def learn_moves
+		moves = PokemonLearnMove.new
 		pokemon = Pokemon.find_by(id: params[:id])
 		waiting_moves = params[:waiting].each.filter {|k,v| v.to_i == 1}
 		learned_moves = params[:learned].each.filter {|k,v| v.to_i == 1}
+
+		# If Skips, rejects all
+		if waiting_moves.blank?
+			moves.reject_waiting(pokemon)
+		end
 
 		# NEED TO REFACTOR 
 		waiting_moves.first(4).each.with_index do |waiting_move, index|
@@ -169,6 +175,8 @@ class PokemonsController < ApplicationController
 					default_move.update(status: 'Accepted')
 					flash[:success] = "#{pokemon.name} has learned new moves!"
 
+					moves.reject_waiting(pokemon)
+
 				# If there's no move to replace and pokemon don't have 4 moves yet
 				elsif pokemon_move_all.length < 4
 					pokemon_move = pokemon.pokemon_moves.build
@@ -183,6 +191,9 @@ class PokemonsController < ApplicationController
 					# Update Waiting move Status
 					default_move.update(status: 'Accepted')
 					flash[:success] = "#{pokemon.name} has learned new moves!"
+
+					moves.reject_waiting(pokemon)
+
 				else
 					flash[:danger] = "#{pokemon.name} already know 4 moves!"
 				end
@@ -193,9 +204,6 @@ class PokemonsController < ApplicationController
 			end
 
 		end
-
-		moves = PokemonLearnMove.new
-		moves.reject_waiting(pokemon)
 
 		redirect_back(fallback_location: root_url)
 	end

@@ -1,5 +1,5 @@
 class BattleHit
-	require 'Pokemon/TypeCalculation'
+	require 'Pokemon/Type'
 	
 	# START HIT CALC
 	def damage_calc(performer_pokemon, target_pokemon, move, critical_hit)

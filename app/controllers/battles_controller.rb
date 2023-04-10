@@ -1,4 +1,5 @@
 class BattlesController < ApplicationController
+	require 'Battle/Experience'
 	require 'Battle/Hit'
 	require 'Pokemon/Evolution'
 
@@ -116,12 +117,22 @@ class BattlesController < ApplicationController
 			if critical
 				flash[:primary] = "Critical Hit!"
 			end
+			perform_status_effect(performer_pokemon, target_pokemon, move)
+			flash[:success] = "#{target_pokemon.name} hit for #{damage} dmg!"
 		else
 			flash[:warning] = "#{performer_pokemon.name} attack Missed!"
 		end
 
 		battle_hit.reduce_pp(performer_move, move.usage_pp)
 
+		# Saves Perfomer & Target & Move Updation
+		unless performer_pokemon.save && target_pokemon.save && performer_move.save
+			flash[:danger] = "Moves failed to perform. #{performer_pokemon.errors.full_messages[0]} and #{target_pokemon.errors.full_messages[0]}"
+		end
+	end
+
+	def perform_status_effect(performer_pokemon, target_pokemon, move)
+		battle_hit = BattleHit.new
 		if battle_hit.status_effect_hit?(move, target_pokemon)
 			battle_hit.apply_status_effect(target_pokemon, move.status_effect_id)
 			if battle_hit.status_effect_hurt?(move)
@@ -133,18 +144,11 @@ class BattlesController < ApplicationController
 			battle_hit.remove_pokemon_status_effect(target_pokemon)
 			flash[:warning] = "Oh no, #{target_pokemon.name} resisted #{move.status_effect_id }"
 		end
-
-		# Saves Perfomer & Target & Move Updation
-		if performer_pokemon.save && target_pokemon.save && performer_move.save
-			flash[:success] = "#{target_pokemon.name} hit for #{damage} dmg!"
-		else 
-			flash[:danger] = "Moves failed to perform. #{performer_pokemon.errors.full_messages[0]} and #{target_pokemon.errors.full_messages[0]}"
-		end
 	end
-
 	# 
 
 	def end
+		battle_exp = BattleExperience.new
 		@battle = Battle.find(params[:id])
 
 		if @battle.status_id != 'finished'
@@ -158,7 +162,7 @@ class BattlesController < ApplicationController
 		@level_up = @winner_pokemon.is_leveling_up
 		current_exp = @winner_pokemon.current_experience
 		next_level_exp = @winner_pokemon.next_level_experience
-		prev_level_exp = previous_level_exp(@winner_pokemon)
+		prev_level_exp = battle_exp.previous_level_exp(@winner_pokemon)
 		@current_exp_percentage = 100*(current_exp-prev_level_exp)/(next_level_exp-prev_level_exp)
 
 		if @level_up
@@ -212,67 +216,29 @@ class BattlesController < ApplicationController
 	end
 
 
-	# Need to refactor this to lib/
 	# START LEVELING
 
 	def gain_exp(winner_pokemon, loser_pokemon)
-		base_exp = loser_pokemon.base_experience
-		level = loser_pokemon.level
-		battle_participant_count = 2
-		gained_exp = (base_exp*level)/7*1/battle_participant_count
+		battle_exp = BattleExperience.new
+		gained_exp = battle_exp.exp_calc(winner_pokemon, loser_pokemon)
+
+		winner_pokemon.current_experience = winner_pokemon.current_experience+gained_exp
 
 		# Set first level experience requirement
 		if winner_pokemon.next_level_experience.blank?
 			set_next_level_exp_requirement(winner_pokemon)
 		end
 
-		winner_pokemon.current_experience = winner_pokemon.current_experience+gained_exp
 		winner_pokemon.is_leveling_up = false
 
-		while leveling_up?(winner_pokemon)
-			level_up(winner_pokemon)
+		while battle_exp.leveling_up?(winner_pokemon)
+			battle_exp.level_up(winner_pokemon)
 			winner_pokemon.is_leveling_up = true
 		end
 
 		unless winner_pokemon.save
 			flash[:danger] = winner_pokemon.errors.full_messages[0]
 		end
-	end
-
-	def next_level_exp(pokemon)
-		level = pokemon.level
-		type = pokemon.type_1_id.to_sym
-		growth = Rails.configuration.PokemonBattle[:GROWTH][type]
-		next_level_requirement = level*(2*(level+1))/growth
-	end
-
-	def previous_level_exp(pokemon)
-		level = pokemon.level-1
-		type = pokemon.type_1_id.to_sym
-		growth = Rails.configuration.PokemonBattle[:GROWTH][type]
-		previous_level_requirement = level*(2*(level+1))/growth
-	end
-
-	def set_next_level_exp_requirement(pokemon)
-		pokemon.next_level_experience = next_level_exp(pokemon)
-	end
-
-	def leveling_up?(pokemon)
-		pokemon.current_experience >= pokemon.next_level_experience
-	end
-
-	def level_up(pokemon)
-		pokemon.level = pokemon.level + 1
-		gain_stats(pokemon)
-		set_next_level_exp_requirement(pokemon)
-	end
-
-	def gain_stats(pokemon)
-		pokemon.attack += (pokemon.attack.to_i/50.to_f).ceil
-		pokemon.defense += (pokemon.defense.to_i/50.to_f).ceil
-		pokemon.speed += (pokemon.speed.to_i/50.to_f).ceil
-		pokemon.special_attack += (pokemon.special_attack.to_i/50.to_f).ceil
-		pokemon.special_defense += (pokemon.special_defense.to_i/50.to_f).ceil
 	end
 
 	# END LEVELING
