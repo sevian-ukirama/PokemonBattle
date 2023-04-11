@@ -20,6 +20,9 @@
         <% if @battles.blank? %>
             <p class="my-2">No Battle so far...</p>
         <% else %>
+            <div class="d-flex justify-content-end w-100 text-light">
+                <%= will_paginate @battles, class: 'pagination border-bottom px-3 py-2' %>
+            </div>
             <table class="table table-striped table-dark">
                 <thead class="sticky-top">
                     <tr>
@@ -68,9 +71,6 @@
             </table>
 
         <% end %>
-            <div class="d-flex justify-content-end w-100">
-                <%= will_paginate @battles, class: 'pagination bg-light px-3 py-2' %>
-            </div>
         </div>
     </div>
 </div>

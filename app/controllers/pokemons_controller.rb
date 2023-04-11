@@ -55,7 +55,9 @@ class PokemonsController < ApplicationController
 		pokemon = Pokemon.new
 
 		pokemon.name = params[:pokemon][:name].capitalize
-		pokemon.image_url = params[:pokemon][:image_url]
+		pokemon.image_url = params[:pokemon][:image_url].blank? ? 
+								"https://img.pokemondb.net/artwork/vector/large/#{pokemon.name.downcase}.png" 
+								: params[:pokemon][:image_url]
 		pokemon.type_1_id = params[:pokemon][:type_1_id]
 		pokemon.type_2_id = params[:pokemon][:type_2_id]
 		pokemon.current_hp = params[:pokemon][:maximum_hp]
@@ -67,7 +69,7 @@ class PokemonsController < ApplicationController
 		pokemon.special_defense = params[:pokemon][:special_defense]
 
 		pokemon_moves = params[:pokemon][:moves]
-		pokemon_moves.first(4).each.with_index do |move, index|
+		pokemon_moves.each.with_index do |move, index|
 			move_id = move[1]
 			unless move_id.blank?
 				move_from_db = Move.find(move_id)
@@ -102,7 +104,9 @@ class PokemonsController < ApplicationController
 		pokemon = Pokemon.find_by(id: params[:id])
 
 		pokemon.name = params[:pokemon][:name].capitalize
-		pokemon.image_url = params[:pokemon][:image_url]
+		pokemon.image_url = params[:pokemon][:image_url].blank? ? 
+								"https://img.pokemondb.net/artwork/vector/large/#{pokemon.name.downcase}.png" 
+								: params[:pokemon][:image_url]
 		pokemon.type_1_id = params[:pokemon][:type_1_id]
 		pokemon.type_2_id = params[:pokemon][:type_2_id]
 		pokemon.current_hp = params[:pokemon][:maximum_hp]

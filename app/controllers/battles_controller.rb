@@ -171,10 +171,10 @@ class BattlesController < ApplicationController
 								.where(status: :Waiting, at_level: ..@winner_pokemon.level)
 								.joins(:move)
 
-			evolution = PokemonEvolution.new
-			if evolution.evolve?(@winner_pokemon) && @waiting_moves.blank?
-				return redirect_to pokedex_evolution_path(@winner_pokemon)
-			end
+			# evolution = PokemonEvolution.new
+			# if evolution.evolve?(@winner_pokemon) && @waiting_moves.blank?
+			# 	return redirect_to pokedex_evolution_path(@winner_pokemon)
+			# end
 		end
 
 	end
@@ -226,7 +226,7 @@ class BattlesController < ApplicationController
 
 		# Set first level experience requirement
 		if winner_pokemon.next_level_experience.blank?
-			set_next_level_exp_requirement(winner_pokemon)
+			battle_exp.set_next_level_exp_requirement(winner_pokemon)
 		end
 
 		winner_pokemon.is_leveling_up = false

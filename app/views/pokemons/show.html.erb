@@ -1,4 +1,4 @@
-<div class="container vh-100">
+<div class="container">
     <%= form_with(url: pokemon_path(@pokemon), scope: :pokemon, method: :PATCH, local: true) do |form| %>
     <header class="masthead d-flex flex-row align-items-center justify-content-between py-3">
         <div class="">
@@ -21,14 +21,14 @@
                 <%= @pokemon.status_id %>
             </p>
         </div>
-        <%= image_tag @pokemon.image_url, id: 'pokemon_1_sprite', class: 'w-25 h-50', alt: asset_path('pokeball.png') %>
+        <%= image_tag @pokemon.image_url, id: 'pokemon_1_sprite', class: 'w-25 h-50', onerror: "this.src='#{asset_path('pokeball.png')}'" %>
         <h5><%= @pokemon.backstory %></h5>
     </div>
     <div class="d-flex flex-row align-items-baseline justify-content-center flex-wrap">
         <div class="flex-grow-1 text-left font-weight-bold border-right border-3 px-3 py-5">
             <div class="border-2">
                 <%= form.label :image_url, class: "mx-1" %>
-                <%= form.text_field :image_url, class: "form-control", required: true %>
+                <%= form.text_field :image_url, class: "form-control" %>
                 <%= form.label :name, class: "mx-1 mt-2" %>
                 <%= form.text_field :name, class: "form-control", required: true %>
 
